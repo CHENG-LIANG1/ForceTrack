@@ -6,7 +6,8 @@ single-page application with local persistence and no backend dependency.
 
 ## Current status
 
-Task 0 — engineering foundation and quality gates — is complete.
+Tasks 0–3 — engineering foundation, domain persistence, application shell, and
+task CRUD — are complete.
 
 The current repository includes:
 
@@ -17,12 +18,19 @@ The current repository includes:
 - ESLint, Prettier, and strict TypeScript checks
 - Vitest with Testing Library
 - Playwright smoke coverage for Chromium at 1280 × 720
-- A responsive Vercel-inspired foundation page
+- `/board` and `/timeline` routes with fallback redirects
+- Persisted Chinese/English locale switching
+- Persisted light/dark/system themes built on semantic color tokens
+- A responsive application shell with route-aware navigation
+- A shared task state provider with serialized local persistence
+- A Radix task editor with create, edit, status updates, deletion, validation,
+  and unsaved-change confirmation
+- A temporary task list entry point ahead of the full Board implementation
 
-Product functionality such as task CRUD, persistence, Board, Timeline,
-internationalization, and theme switching will be implemented in subsequent
-tasks. See [PRD.md](./PRD.md) and [TECHNICAL_DESIGN.md](./TECHNICAL_DESIGN.md)
-for the authoritative scope and implementation plan.
+Board columns, drag-and-drop, filters, and the Timeline grid will be implemented
+in subsequent tasks. See [PRD.md](./PRD.md) and
+[TECHNICAL_DESIGN.md](./TECHNICAL_DESIGN.md) for the authoritative scope and
+implementation plan.
 
 ## Requirements
 

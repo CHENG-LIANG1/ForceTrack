@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "primary": "Primary navigation",
+    "board": "Board",
+    "timeline": "Timeline"
+  },
+  "preferences": {
+    "language": "Language",
+    "theme": "Theme",
+    "locale": {
+      "zh-CN": "中文",
+      "en-US": "English"
+    },
+    "themeOption": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "board": {
+    "title": "Board",
+    "description": "Move tasks through each stage of delivery."
+  },
+  "task": {
+    "actions": {
+      "create": "New task",
+      "save": "Save task",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "close": "Close task editor",
+      "delete": "Delete task",
+      "confirmDelete": "Delete permanently",
+      "keepEditing": "Keep editing",
+      "discard": "Discard changes",
+      "editLabel": "Edit {{key}}: {{title}}"
+    },
+    "dialog": {
+      "createTitle": "Create task",
+      "createDescription": "Add the details needed to move this work forward.",
+      "editTitle": "Task details",
+      "editDescription": "Review or update this task."
+    },
+    "fields": {
+      "id": "Task ID",
+      "title": "Title",
+      "description": "Description",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "startDate": "Start date",
+      "dueDate": "Due date"
+    },
+    "status": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "in_review": "In Review",
+      "done": "Done"
+    },
+    "priority": {
+      "low": "Low priority",
+      "medium": "Medium priority",
+      "high": "High priority"
+    },
+    "unassigned": "Unassigned",
+    "characterCount": "{{count}} / 2,000 characters",
+    "list": {
+      "title": "Tasks",
+      "description": "Temporary list view for creating and maintaining task details.",
+      "count_one": "{{count}} task",
+      "count_other": "{{count}} tasks",
+      "loading": "Loading tasks…",
+      "empty": "No tasks yet. Create the first one to get started."
+    },
+    "discard": {
+      "title": "Discard unsaved changes?",
+      "description": "Your edits have not been saved. You can keep editing or discard them."
+    },
+    "delete": {
+      "title": "Delete this task?",
+      "description": "{{title}} will be permanently removed from Board and Timeline."
+    },
+    "feedback": {
+      "recovered": "Stored task data was invalid, so ForceTrack restored the demo tasks.",
+      "saveFailed": "Changes are visible for now, but could not be saved to this browser."
+    }
+  },
+  "validation": {
+    "titleRequired": "Enter a task title.",
+    "titleTooLong": "Keep the title to 100 characters or fewer.",
+    "descriptionTooLong": "Keep the description to 2,000 characters or fewer.",
+    "invalidDate": "Enter a valid calendar date.",
+    "dateRange": "Due date cannot be earlier than start date.",
+    "unknownAssignee": "Choose a member from the list."
+  },
+  "timeline": {
+    "title": "Timeline",
+    "description": "Review scheduled work across a shared calendar.",
+    "emptyTitle": "Your timeline is ready",
+    "emptyDescription": "Scheduled task bars arrive in Task 6."
+  },
+  "a11y": {
+    "forceTrackHome": "ForceTrack board",
+    "preferenceControls": "Language and theme preferences"
+  }
+}

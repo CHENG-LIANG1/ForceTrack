@@ -1,4 +1,4 @@
-import type { UserPreferences } from '@/domain/member';
+import type { SupportedLocale, UserPreferences } from '@/domain/member';
 import {
   RepositoryError,
   browserStorage,
@@ -10,17 +10,30 @@ import { userPreferencesSchema } from '@/infrastructure/storage-schema';
 
 export const PREFERENCES_STORAGE_KEY = 'forcetrack:preferences:v1';
 
-const DEFAULT_PREFERENCES: UserPreferences = {
-  locale: 'zh-CN',
-  theme: 'system',
-};
+/** Maps the browser language to the two locales packaged with the MVP. */
+export function detectBrowserLocale(language?: string): SupportedLocale {
+  const browserLanguage =
+    language ??
+    (typeof navigator === 'undefined' ? undefined : navigator.language);
+
+  return browserLanguage?.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
+}
+
+/** Builds first-run preferences without allowing later browser changes to override saved choices. */
+export function createDefaultPreferences(language?: string): UserPreferences {
+  return {
+    locale: detectBrowserLocale(language),
+    theme: 'system',
+  };
+}
 
 export class LocalPreferencesRepository implements PreferencesRepository {
   constructor(
     private readonly storage: StorageAdapter = browserStorage(),
-    private readonly defaults: UserPreferences = DEFAULT_PREFERENCES,
+    private readonly defaults: UserPreferences = createDefaultPreferences(),
   ) {}
 
+  /** Loads a validated preference record, creating or recovering it when needed. */
   async load(): Promise<UserPreferences> {
     let rawPreferences: string | null;
     try {
