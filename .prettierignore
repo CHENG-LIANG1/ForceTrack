@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+output
+.playwright-cli
+pnpm-lock.yaml
+PRD.md
+TECHNICAL_DESIGN.md
