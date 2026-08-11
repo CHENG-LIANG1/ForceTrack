@@ -11,6 +11,7 @@ import {
 import { TaskContext } from '@/app/task-context';
 import {
   createTaskAction,
+  moveTaskAction,
   type TaskAction,
   updateTaskAction,
 } from '@/domain/actions';
@@ -19,6 +20,7 @@ import {
   browserDomainDependencies,
   type CreateTaskInput,
   type DomainDependencies,
+  type TaskStatus,
   type TaskSnapshotV1,
   type UpdateTaskInput,
 } from '@/domain/task';
@@ -118,6 +120,13 @@ export function TaskProvider({
     [commit],
   );
 
+  const move = useCallback(
+    async (taskId: string, toStatus: TaskStatus, toIndex: number) => {
+      await commit(moveTaskAction(taskId, toStatus, toIndex, dependencies));
+    },
+    [commit, dependencies],
+  );
+
   const value = useMemo(
     () => ({
       snapshot: isReady ? snapshot : null,
@@ -127,11 +136,13 @@ export function TaskProvider({
       createTask: create,
       updateTask: update,
       deleteTask: remove,
+      moveTask: move,
     }),
     [
       create,
       isReady,
       loadWasRecovered,
+      move,
       persistenceFailed,
       remove,
       snapshot,

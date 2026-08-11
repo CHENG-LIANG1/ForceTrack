@@ -240,8 +240,6 @@ describe('TaskDialog CRUD flow', () => {
 
     await waitFor(() => expect(repository.saves).toHaveLength(2));
     expect(repository.saves[1].tasks).toEqual([]);
-    expect(
-      screen.getByText('No tasks yet. Create the first one to get started.'),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText('No tasks in this stage.')).toHaveLength(4);
   });
 });

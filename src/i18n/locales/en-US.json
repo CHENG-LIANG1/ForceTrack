@@ -19,7 +19,20 @@
   },
   "board": {
     "title": "Board",
-    "description": "Move tasks through each stage of delivery."
+    "description": "Move tasks through each stage of delivery.",
+    "loading": "Loading board…",
+    "columnsLabel": "Task status columns",
+    "columnCount": "{{status}}, {{count}} tasks",
+    "emptyColumn": "No tasks in this stage.",
+    "addTask": "Add task",
+    "createInColumn": "Create task in {{status}}",
+    "dnd": {
+      "instructions": "To pick up a task, press Space. While dragging, use the arrow keys to move it. Press Space again to drop, or Escape to cancel.",
+      "pickedUp": "Picked up {{title}}.",
+      "over": "{{title}} is over {{status}}.",
+      "dropped": "Moved {{title}} to {{status}}.",
+      "cancelled": "Task move cancelled."
+    }
   },
   "task": {
     "actions": {
