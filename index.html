@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,6 +9,52 @@
       content="ForceTrack — a focused workspace for moving work forward."
     />
     <title>ForceTrack</title>
+    <script>
+      /* Apply persisted locale and effective theme before React mounts to avoid a visible theme flash. */
+      (() => {
+        const root = document.documentElement;
+        let locale = navigator.language.toLowerCase().startsWith('zh')
+          ? 'zh-CN'
+          : 'en-US';
+        let themePreference = 'system';
+
+        try {
+          const rawPreferences = localStorage.getItem(
+            'forcetrack:preferences:v1',
+          );
+          const preferences = rawPreferences
+            ? JSON.parse(rawPreferences)
+            : null;
+
+          if (
+            preferences?.locale === 'zh-CN' ||
+            preferences?.locale === 'en-US'
+          ) {
+            locale = preferences.locale;
+          }
+          if (
+            preferences?.theme === 'light' ||
+            preferences?.theme === 'dark' ||
+            preferences?.theme === 'system'
+          ) {
+            themePreference = preferences.theme;
+          }
+        } catch {
+          // Invalid or unavailable storage falls back to browser preferences.
+        }
+
+        const theme =
+          themePreference === 'system'
+            ? matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : themePreference;
+
+        root.lang = locale;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

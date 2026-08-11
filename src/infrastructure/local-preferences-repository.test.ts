@@ -1,6 +1,8 @@
 import {
   LocalPreferencesRepository,
   PREFERENCES_STORAGE_KEY,
+  createDefaultPreferences,
+  detectBrowserLocale,
 } from '@/infrastructure/local-preferences-repository';
 import { RECOVERY_STORAGE_KEY } from '@/infrastructure/local-task-repository';
 import type { StorageAdapter } from '@/infrastructure/repositories';
@@ -20,6 +22,15 @@ class MemoryStorage implements StorageAdapter {
 }
 
 describe('LocalPreferencesRepository', () => {
+  it('maps Chinese browser locales and falls back to English', () => {
+    expect(detectBrowserLocale('zh-Hans-CN')).toBe('zh-CN');
+    expect(detectBrowserLocale('en-GB')).toBe('en-US');
+    expect(createDefaultPreferences('fr-FR')).toEqual({
+      locale: 'en-US',
+      theme: 'system',
+    });
+  });
+
   it('persists injected defaults on first load', async () => {
     const storage = new MemoryStorage();
     const defaults = { locale: 'en-US', theme: 'dark' } as const;
@@ -47,9 +58,10 @@ describe('LocalPreferencesRepository', () => {
     const storage = new MemoryStorage();
     const invalidRaw = JSON.stringify({ locale: 'fr', theme: 'neon' });
     storage.values.set(PREFERENCES_STORAGE_KEY, invalidRaw);
+    const defaults = { locale: 'zh-CN', theme: 'system' } as const;
 
     await expect(
-      new LocalPreferencesRepository(storage).load(),
+      new LocalPreferencesRepository(storage, defaults).load(),
     ).resolves.toEqual({ locale: 'zh-CN', theme: 'system' });
     expect(storage.values.get(RECOVERY_STORAGE_KEY)).toBe(invalidRaw);
   });

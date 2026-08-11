@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "primary": "主导航",
+    "board": "看板",
+    "timeline": "时间线"
+  },
+  "preferences": {
+    "language": "语言",
+    "theme": "主题",
+    "locale": {
+      "zh-CN": "中文",
+      "en-US": "English"
+    },
+    "themeOption": {
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    }
+  },
+  "board": {
+    "title": "看板",
+    "description": "推动任务依次通过交付流程的各个阶段。"
+  },
+  "task": {
+    "actions": {
+      "create": "新建任务",
+      "save": "保存任务",
+      "saving": "正在保存…",
+      "cancel": "取消",
+      "close": "关闭任务编辑器",
+      "delete": "删除任务",
+      "confirmDelete": "永久删除",
+      "keepEditing": "继续编辑",
+      "discard": "放弃修改",
+      "editLabel": "编辑 {{key}}：{{title}}"
+    },
+    "dialog": {
+      "createTitle": "新建任务",
+      "createDescription": "补充推进这项工作所需的信息。",
+      "editTitle": "任务详情",
+      "editDescription": "查看或修改这项任务。"
+    },
+    "fields": {
+      "id": "任务编号",
+      "title": "标题",
+      "description": "描述",
+      "status": "状态",
+      "priority": "优先级",
+      "assignee": "负责人",
+      "startDate": "开始日期",
+      "dueDate": "截止日期"
+    },
+    "status": {
+      "todo": "待办",
+      "in_progress": "进行中",
+      "in_review": "审核中",
+      "done": "已完成"
+    },
+    "priority": {
+      "low": "低优先级",
+      "medium": "中优先级",
+      "high": "高优先级"
+    },
+    "unassigned": "未分配",
+    "characterCount": "{{count}} / 2,000 字",
+    "list": {
+      "title": "任务",
+      "description": "用于新建和维护任务详情的临时列表视图。",
+      "count_one": "{{count}} 个任务",
+      "count_other": "{{count}} 个任务",
+      "loading": "正在加载任务…",
+      "empty": "还没有任务，先新建第一项任务吧。"
+    },
+    "discard": {
+      "title": "放弃未保存的修改？",
+      "description": "你的修改尚未保存。可以继续编辑，也可以放弃修改。"
+    },
+    "delete": {
+      "title": "删除这项任务？",
+      "description": "{{title}} 将从看板和时间线中永久移除。"
+    },
+    "feedback": {
+      "recovered": "已存储的任务数据无效，ForceTrack 已恢复演示任务。",
+      "saveFailed": "修改目前仍可见，但无法保存到此浏览器。"
+    }
+  },
+  "validation": {
+    "titleRequired": "请输入任务标题。",
+    "titleTooLong": "标题不能超过 100 个字符。",
+    "descriptionTooLong": "描述不能超过 2,000 个字符。",
+    "invalidDate": "请输入有效的日历日期。",
+    "dateRange": "截止日期不能早于开始日期。",
+    "unknownAssignee": "请选择列表中的成员。"
+  },
+  "timeline": {
+    "title": "时间线",
+    "description": "在共享日历中查看已排期的工作。",
+    "emptyTitle": "时间线已准备就绪",
+    "emptyDescription": "排期任务条将在 Task 6 中实现。"
+  },
+  "a11y": {
+    "forceTrackHome": "ForceTrack 看板",
+    "preferenceControls": "语言和主题偏好"
+  }
+}
