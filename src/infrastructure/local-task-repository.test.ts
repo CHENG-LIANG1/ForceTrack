@@ -1,5 +1,6 @@
 import {
   LocalTaskRepository,
+  LEGACY_TASK_STORAGE_KEY,
   RECOVERY_STORAGE_KEY,
   TASK_STORAGE_KEY,
 } from '@/infrastructure/local-task-repository';
@@ -7,7 +8,7 @@ import {
   RepositoryError,
   type StorageAdapter,
 } from '@/infrastructure/repositories';
-import { makeSnapshot } from '@/test/fixtures';
+import { makeLegacySnapshot, makeSnapshot } from '@/test/fixtures';
 
 class MemoryStorage implements StorageAdapter {
   readonly values = new Map<string, string>();
@@ -38,6 +39,56 @@ describe('LocalTaskRepository', () => {
     expect(JSON.parse(storage.values.get(TASK_STORAGE_KEY)!)).toEqual(seed);
   });
 
+  it('migrates V1 once, preserves legacy raw data, and loads V2 on refresh', async () => {
+    const storage = new MemoryStorage();
+    const legacy = makeLegacySnapshot();
+    const legacyRaw = JSON.stringify(legacy);
+    storage.values.set(LEGACY_TASK_STORAGE_KEY, legacyRaw);
+    const repository = new LocalTaskRepository(storage);
+
+    const first = await repository.load();
+    expect(first.kind).toBe('migrated');
+    expect(first.snapshot.schemaVersion).toBe(2);
+    expect(first.snapshot.tasks.map((task) => task.id)).toEqual(
+      legacy.tasks.map((task) => task.id),
+    );
+    expect(first.snapshot.tasks.map((task) => task.key)).toEqual(
+      legacy.tasks.map((task) => task.key),
+    );
+    expect(first.snapshot.tasks.map((task) => task.position)).toEqual(
+      legacy.tasks.map((task) => task.position),
+    );
+    expect(storage.values.get(LEGACY_TASK_STORAGE_KEY)).toBe(legacyRaw);
+
+    const second = await repository.load();
+    expect(second.kind).toBe('loaded');
+    expect(second.snapshot).toEqual(first.snapshot);
+  });
+
+  it('migrates a valid empty V1 snapshot instead of reseeding it', async () => {
+    const storage = new MemoryStorage();
+    const legacy = makeLegacySnapshot({ tasks: [], nextTaskNumber: 3 });
+    storage.values.set(LEGACY_TASK_STORAGE_KEY, JSON.stringify(legacy));
+    const seedFactory = vi.fn(() => makeSnapshot());
+
+    const result = await new LocalTaskRepository(storage, seedFactory).load();
+    expect(result.kind).toBe('migrated');
+    expect(result.snapshot.tasks).toEqual([]);
+    expect(result.snapshot.sprints).toEqual([]);
+    expect(seedFactory).not.toHaveBeenCalled();
+  });
+
+  it('backs up corrupt V1 and recovers when no V2 exists', async () => {
+    const storage = new MemoryStorage();
+    const seed = makeSnapshot({ tasks: [], nextTaskNumber: 1 });
+    storage.values.set(LEGACY_TASK_STORAGE_KEY, '{broken-v1');
+
+    await expect(
+      new LocalTaskRepository(storage, () => seed).load(),
+    ).resolves.toEqual({ kind: 'recovered', snapshot: seed });
+    expect(storage.values.get(RECOVERY_STORAGE_KEY)).toBe('{broken-v1');
+  });
+
   it('loads a valid empty task list instead of reseeding it', async () => {
     const storage = new MemoryStorage();
     const emptySnapshot = makeSnapshot({ tasks: [], nextTaskNumber: 3 });
@@ -63,6 +114,20 @@ describe('LocalTaskRepository', () => {
     ).resolves.toEqual({ kind: 'recovered', snapshot: seed });
     expect(storage.values.get(RECOVERY_STORAGE_KEY)).toBe(invalidRaw);
     expect(JSON.parse(storage.values.get(TASK_STORAGE_KEY)!)).toEqual(seed);
+  });
+
+  it('does not fall back to V1 when an existing V2 snapshot is corrupt', async () => {
+    const storage = new MemoryStorage();
+    const seed = makeSnapshot({ tasks: [], nextTaskNumber: 1 });
+    storage.values.set(TASK_STORAGE_KEY, '{broken-v2');
+    storage.values.set(
+      LEGACY_TASK_STORAGE_KEY,
+      JSON.stringify(makeLegacySnapshot()),
+    );
+
+    const result = await new LocalTaskRepository(storage, () => seed).load();
+    expect(result).toEqual({ kind: 'recovered', snapshot: seed });
+    expect(storage.values.get(RECOVERY_STORAGE_KEY)).toBe('{broken-v2');
   });
 
   it('reports unavailable reads as an explicit repository error', async () => {

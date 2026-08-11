@@ -1,9 +1,10 @@
 import { taskReducer } from '@/domain/task-reducer';
-import type { Task, TaskSnapshotV1, TaskStatus } from '@/domain/task';
+import { startSprint, type Sprint } from '@/domain/sprint';
+import type { Task, TaskSnapshotV2, TaskStatus } from '@/domain/task';
 import { FIXED_NOW, LATER_NOW, makeSnapshot, makeTask } from '@/test/fixtures';
 
 function positions(
-  snapshot: TaskSnapshotV1,
+  snapshot: TaskSnapshotV2,
   status: TaskStatus,
 ): Array<[string, number]> {
   return snapshot.tasks
@@ -12,7 +13,7 @@ function positions(
     .map((task) => [task.id, task.position]);
 }
 
-function expectSnapshotInvariants(snapshot: TaskSnapshotV1): void {
+function expectSnapshotInvariants(snapshot: TaskSnapshotV2): void {
   expect(new Set(snapshot.tasks.map((task) => task.id)).size).toBe(
     snapshot.tasks.length,
   );
@@ -21,17 +22,25 @@ function expectSnapshotInvariants(snapshot: TaskSnapshotV1): void {
       positions(snapshot, status).map((_, index) => index),
     );
   }
+  for (const sprintId of new Set(snapshot.tasks.map((task) => task.sprintId))) {
+    const ranks = snapshot.tasks
+      .filter((task) => task.sprintId === sprintId)
+      .sort((left, right) => left.rank - right.rank)
+      .map((task) => task.rank);
+    expect(ranks).toEqual(ranks.map((_, index) => index));
+  }
 }
 
 const mixedTasks: Task[] = [
-  makeTask({ id: 'todo-a', key: 'FT-1', status: 'todo', position: 0 }),
-  makeTask({ id: 'todo-b', key: 'FT-2', status: 'todo', position: 1 }),
-  makeTask({ id: 'todo-c', key: 'FT-3', status: 'todo', position: 2 }),
+  makeTask({ id: 'todo-a', key: 'FT-1', status: 'todo', position: 0, rank: 0 }),
+  makeTask({ id: 'todo-b', key: 'FT-2', status: 'todo', position: 1, rank: 1 }),
+  makeTask({ id: 'todo-c', key: 'FT-3', status: 'todo', position: 2, rank: 2 }),
   makeTask({
     id: 'review-a',
     key: 'FT-4',
     status: 'in_review',
     position: 0,
+    rank: 3,
   }),
 ];
 
@@ -66,6 +75,7 @@ describe('taskReducer', () => {
       position: 2,
       createdAt: LATER_NOW,
       updatedAt: LATER_NOW,
+      rank: 2,
     });
     const result = taskReducer(state, {
       type: 'task/created',
@@ -227,5 +237,219 @@ describe('taskReducer', () => {
         },
       }),
     ).toBe(moved);
+  });
+
+  it('starts a planned sprint and completes it by returning unfinished work to backlog', () => {
+    const planned: Sprint = {
+      id: 'sprint-2',
+      name: 'Sprint 2',
+      goal: '',
+      startDate: null,
+      endDate: null,
+      status: 'planned',
+      position: 0,
+      createdAt: FIXED_NOW,
+      startedAt: null,
+      completedAt: null,
+    };
+    const state = makeSnapshot({
+      sprints: [planned],
+      tasks: [
+        makeTask({ id: 'open', sprintId: planned.id, status: 'todo' }),
+        makeTask({
+          id: 'done',
+          key: 'FT-2',
+          sprintId: planned.id,
+          status: 'done',
+          rank: 1,
+        }),
+      ],
+    });
+    const startedSprint = startSprint(
+      planned,
+      { startDate: '2026-08-12', endDate: '2026-08-25' },
+      state.sprints,
+      2,
+      FIXED_NOW,
+    );
+    const started = taskReducer(state, {
+      type: 'sprint/started',
+      payload: { sprintId: planned.id, sprint: startedSprint },
+    });
+    expect(started.sprints[0]).toMatchObject({
+      status: 'active',
+      startDate: '2026-08-12',
+      endDate: '2026-08-25',
+    });
+
+    const completed = taskReducer(started, {
+      type: 'sprint/completed',
+      payload: {
+        sprintId: planned.id,
+        completedAt: LATER_NOW,
+        incompleteTargetSprintId: null,
+      },
+    });
+    expect(completed.sprints[0].status).toBe('completed');
+    expect(completed.tasks.find((task) => task.id === 'open')?.sprintId).toBe(
+      null,
+    );
+    expect(completed.tasks.find((task) => task.id === 'done')?.sprintId).toBe(
+      planned.id,
+    );
+    expect(completed.sprints[0].completedAt).toBe(LATER_NOW);
+    expectSnapshotInvariants(completed);
+  });
+
+  it('reorders within a planning section and moves across sections without changing status', () => {
+    const planned = {
+      ...makeSnapshot().sprints[0],
+      id: 'sprint-2',
+      status: 'planned' as const,
+      position: 1,
+      startedAt: null,
+      completedAt: null,
+    };
+    const tasks = [
+      makeTask({ id: 'a', key: 'FT-1', rank: 0 }),
+      makeTask({ id: 'b', key: 'FT-2', position: 1, rank: 1 }),
+      makeTask({
+        id: 'c',
+        key: 'FT-3',
+        position: 2,
+        rank: 0,
+        sprintId: planned.id,
+      }),
+    ];
+    const state = makeSnapshot({
+      nextTaskNumber: 4,
+      tasks,
+      sprints: [...makeSnapshot().sprints, planned],
+    });
+
+    const reordered = taskReducer(state, {
+      type: 'backlog/task-ranked',
+      payload: {
+        taskId: 'b',
+        sprintId: 'sprint-1',
+        toIndex: 0,
+        updatedAt: LATER_NOW,
+      },
+    });
+    expect(
+      reordered.tasks
+        .filter((task) => task.sprintId === 'sprint-1')
+        .sort((left, right) => left.rank - right.rank)
+        .map((task) => task.id),
+    ).toEqual(['b', 'a']);
+
+    const moved = taskReducer(reordered, {
+      type: 'backlog/task-ranked',
+      payload: {
+        taskId: 'a',
+        sprintId: planned.id,
+        toIndex: 1,
+        updatedAt: LATER_NOW,
+      },
+    });
+    expect(moved.tasks.find((task) => task.id === 'a')).toMatchObject({
+      sprintId: planned.id,
+      rank: 1,
+      status: 'todo',
+    });
+    expectSnapshotInvariants(moved);
+  });
+
+  it('completes a sprint atomically into a planned target and keeps done work behind', () => {
+    const active = makeSnapshot().sprints[0];
+    const planned = {
+      ...active,
+      id: 'sprint-2',
+      status: 'planned' as const,
+      position: 1,
+      startDate: null,
+      endDate: null,
+      startedAt: null,
+    };
+    const state = makeSnapshot({
+      nextTaskNumber: 4,
+      sprints: [active, planned],
+      tasks: [
+        makeTask({ id: 'open', key: 'FT-1', rank: 0 }),
+        makeTask({ id: 'done', key: 'FT-2', status: 'done', rank: 1 }),
+        makeTask({
+          id: 'target',
+          key: 'FT-3',
+          sprintId: planned.id,
+          position: 1,
+          rank: 0,
+        }),
+      ],
+    });
+    const before = structuredClone(state);
+    const result = taskReducer(state, {
+      type: 'sprint/completed',
+      payload: {
+        sprintId: active.id,
+        completedAt: LATER_NOW,
+        incompleteTargetSprintId: planned.id,
+      },
+    });
+
+    expect(state).toEqual(before);
+    expect(result.tasks.find((task) => task.id === 'done')?.sprintId).toBe(
+      active.id,
+    );
+    expect(result.tasks.find((task) => task.id === 'open')).toMatchObject({
+      sprintId: planned.id,
+      rank: 1,
+    });
+    expectSnapshotInvariants(result);
+  });
+
+  it('deletes only a planned sprint and moves its tasks to the requested target', () => {
+    const active = makeSnapshot().sprints[0];
+    const planned = {
+      ...active,
+      id: 'planned',
+      status: 'planned' as const,
+      position: 1,
+      startDate: null,
+      endDate: null,
+      startedAt: null,
+    };
+    const state = makeSnapshot({
+      sprints: [active, planned],
+      nextTaskNumber: 3,
+      tasks: [
+        makeTask({ id: 'active', key: 'FT-1', rank: 0 }),
+        makeTask({
+          id: 'planned-task',
+          key: 'FT-2',
+          position: 1,
+          rank: 0,
+          sprintId: planned.id,
+        }),
+      ],
+    });
+    const result = taskReducer(state, {
+      type: 'sprint/deleted',
+      payload: { sprintId: planned.id, taskTargetSprintId: null },
+    });
+    expect(result.sprints.map((sprint) => sprint.id)).toEqual([active.id]);
+    expect(
+      result.tasks.find((task) => task.id === 'planned-task'),
+    ).toMatchObject({
+      sprintId: null,
+      rank: 0,
+      status: 'todo',
+    });
+    expectSnapshotInvariants(result);
+    expect(
+      taskReducer(state, {
+        type: 'sprint/deleted',
+        payload: { sprintId: active.id, taskTargetSprintId: null },
+      }),
+    ).toBe(state);
   });
 });

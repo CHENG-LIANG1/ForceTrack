@@ -7,7 +7,7 @@ import type {
   UserPreferences,
 } from '@/domain/member';
 
-export type ResolvedTheme = Exclude<ThemePreference, 'system'>;
+export type ResolvedTheme = ThemePreference;
 
 export interface PreferencesContextValue {
   preferences: UserPreferences;

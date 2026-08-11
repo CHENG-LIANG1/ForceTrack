@@ -1,11 +1,19 @@
-import { taskSnapshotV1Schema } from '@/infrastructure/storage-schema';
-import { makeSnapshot, makeTask } from '@/test/fixtures';
+import {
+  taskSnapshotV1Schema,
+  taskSnapshotV2Schema,
+} from '@/infrastructure/storage-schema';
+import { makeLegacySnapshot, makeSnapshot, makeTask } from '@/test/fixtures';
 
-describe('taskSnapshotV1Schema', () => {
-  it('accepts a valid versioned snapshot and returns a separate value', () => {
+describe('versioned task snapshot schemas', () => {
+  it('keeps V1 as the exact T0-T4 input format', () => {
+    const legacy = makeLegacySnapshot();
+    expect(taskSnapshotV1Schema.parse(legacy)).toEqual(legacy);
+    expect(taskSnapshotV1Schema.safeParse(makeSnapshot()).success).toBe(false);
+  });
+
+  it('accepts a valid V2 snapshot and returns a separate value', () => {
     const snapshot = makeSnapshot();
-    const parsed = taskSnapshotV1Schema.parse(snapshot);
-
+    const parsed = taskSnapshotV2Schema.parse(snapshot);
     expect(parsed).toEqual(snapshot);
     expect(parsed).not.toBe(snapshot);
   });
@@ -13,12 +21,12 @@ describe('taskSnapshotV1Schema', () => {
   it.each([
     {
       label: 'wrong version',
-      snapshot: { ...makeSnapshot(), schemaVersion: 2 },
+      snapshot: { ...makeSnapshot(), schemaVersion: 1 },
     },
     {
-      label: 'duplicate IDs',
+      label: 'duplicate task IDs',
       snapshot: makeSnapshot({
-        tasks: [makeTask(), makeTask({ key: 'FT-2', position: 1 })],
+        tasks: [makeTask(), makeTask({ key: 'FT-2', position: 1, rank: 1 })],
       }),
     },
     {
@@ -26,7 +34,16 @@ describe('taskSnapshotV1Schema', () => {
       snapshot: makeSnapshot({
         tasks: [
           makeTask(),
-          makeTask({ id: 'task-2', key: 'FT-2', position: 2 }),
+          makeTask({ id: 'task-2', key: 'FT-2', position: 2, rank: 1 }),
+        ],
+      }),
+    },
+    {
+      label: 'rank gap',
+      snapshot: makeSnapshot({
+        tasks: [
+          makeTask(),
+          makeTask({ id: 'task-2', key: 'FT-2', position: 1, rank: 2 }),
         ],
       }),
     },
@@ -37,15 +54,52 @@ describe('taskSnapshotV1Schema', () => {
       }),
     },
     {
-      label: 'invalid calendar date',
+      label: 'missing reporter',
       snapshot: makeSnapshot({
-        tasks: [makeTask({ startDate: '2026-02-30' })],
+        tasks: [makeTask({ reporterId: 'unknown' })],
       }),
     },
     {
-      label: 'reverse date range',
+      label: 'missing sprint',
       snapshot: makeSnapshot({
-        tasks: [makeTask({ startDate: '2026-08-12', dueDate: '2026-08-11' })],
+        tasks: [makeTask({ sprintId: 'unknown' })],
+      }),
+    },
+    {
+      label: 'invalid parent',
+      snapshot: makeSnapshot({
+        tasks: [makeTask({ parentId: 'task-1' })],
+      }),
+    },
+    {
+      label: 'duplicate member email ignoring case',
+      snapshot: makeSnapshot({
+        members: [
+          makeSnapshot().members[0],
+          {
+            ...makeSnapshot().members[1],
+            email: 'ADA@example.com',
+          },
+        ],
+      }),
+    },
+    {
+      label: 'multiple active sprints',
+      snapshot: makeSnapshot({
+        sprints: [
+          makeSnapshot().sprints[0],
+          {
+            ...makeSnapshot().sprints[0],
+            id: 'sprint-2',
+            position: 1,
+          },
+        ],
+      }),
+    },
+    {
+      label: 'invalid calendar date',
+      snapshot: makeSnapshot({
+        tasks: [makeTask({ startDate: '2026-02-30' })],
       }),
     },
     {
@@ -53,6 +107,6 @@ describe('taskSnapshotV1Schema', () => {
       snapshot: makeSnapshot({ nextTaskNumber: 2 }),
     },
   ])('rejects $label', ({ snapshot }) => {
-    expect(taskSnapshotV1Schema.safeParse(snapshot).success).toBe(false);
+    expect(taskSnapshotV2Schema.safeParse(snapshot).success).toBe(false);
   });
 });

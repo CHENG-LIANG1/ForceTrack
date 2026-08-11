@@ -14,7 +14,6 @@ import {
   type PreferencesContextValue,
   type ResolvedTheme,
 } from '@/app/preferences-context';
-import { getSystemTheme } from '@/app/theme';
 import type { UserPreferences } from '@/domain/member';
 import {
   LocalPreferencesRepository,
@@ -50,12 +49,7 @@ export function PreferencesProvider({
   const [preferences, setPreferences] =
     useState<UserPreferences>(initialPreferences);
   const preferencesRef = useRef(preferences);
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
-    const mountedTheme = document.documentElement.dataset.theme;
-    return mountedTheme === 'dark' || mountedTheme === 'light'
-      ? mountedTheme
-      : getSystemTheme();
-  });
+  const resolvedTheme: ResolvedTheme = preferences.theme;
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -84,32 +78,10 @@ export function PreferencesProvider({
 
   useEffect(() => {
     void i18nInstance.changeLanguage(preferences.locale);
+    if (!isReady) return;
 
-    const mediaQuery =
-      typeof window.matchMedia === 'function'
-        ? window.matchMedia('(prefers-color-scheme: dark)')
-        : null;
-
-    /** Recomputes only the effective theme; the persisted preference remains `system`. */
-    const synchronizeTheme = () => {
-      const nextResolvedTheme =
-        preferences.theme === 'system'
-          ? mediaQuery?.matches
-            ? 'dark'
-            : 'light'
-          : preferences.theme;
-
-      setResolvedTheme(nextResolvedTheme);
-      applyDocumentPreferences(preferences, nextResolvedTheme);
-    };
-
-    synchronizeTheme();
-    if (preferences.theme === 'system') {
-      mediaQuery?.addEventListener('change', synchronizeTheme);
-    }
-
-    return () => mediaQuery?.removeEventListener('change', synchronizeTheme);
-  }, [i18nInstance, preferences]);
+    applyDocumentPreferences(preferences, preferences.theme);
+  }, [i18nInstance, isReady, preferences]);
 
   /** Updates UI state immediately, then writes the complete preference record through its repository. */
   const updatePreferences = useCallback(

@@ -11,10 +11,12 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         outline:
-          'border border-border bg-background text-foreground hover:bg-muted',
+          'border border-border bg-surface text-foreground hover:bg-surface-hover',
+        unstyled: '',
       },
       size: {
         default: 'h-9 px-4 py-2',
+        dialog: 'h-9 min-w-[88px] rounded-lg px-3 text-xs',
         lg: 'h-11 px-5 text-[13px]',
       },
     },
@@ -40,11 +42,13 @@ export function Button({
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
+  const resolvedClassName =
+    variant === 'unstyled'
+      ? cn(
+          'disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none',
+          className,
+        )
+      : cn(buttonVariants({ variant, size, className }));
 
-  return (
-    <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
+  return <Comp className={resolvedClassName} {...props} />;
 }

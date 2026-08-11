@@ -10,6 +10,17 @@ import { userPreferencesSchema } from '@/infrastructure/storage-schema';
 
 export const PREFERENCES_STORAGE_KEY = 'forcetrack:preferences:v1';
 
+function hasLegacySystemTheme(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'theme' in value &&
+    value.theme === 'system'
+  );
+}
+
 /** Maps the browser language to the two locales packaged with the MVP. */
 export function detectBrowserLocale(language?: string): SupportedLocale {
   const browserLanguage =
@@ -23,7 +34,7 @@ export function detectBrowserLocale(language?: string): SupportedLocale {
 export function createDefaultPreferences(language?: string): UserPreferences {
   return {
     locale: detectBrowserLocale(language),
-    theme: 'system',
+    theme: 'dark',
   };
 }
 
@@ -49,7 +60,16 @@ export class LocalPreferencesRepository implements PreferencesRepository {
     }
 
     try {
-      return userPreferencesSchema.parse(JSON.parse(rawPreferences));
+      const parsedPreferences: unknown = JSON.parse(rawPreferences);
+      const normalizedPreferences = hasLegacySystemTheme(parsedPreferences)
+        ? { ...parsedPreferences, theme: 'dark' }
+        : parsedPreferences;
+      const preferences = userPreferencesSchema.parse(normalizedPreferences);
+
+      if (normalizedPreferences !== parsedPreferences) {
+        await this.save(preferences);
+      }
+      return preferences;
     } catch {
       const preferences = this.validatedDefaults();
       try {

@@ -1,25 +1,30 @@
 {
   "nav": {
     "primary": "Primary navigation",
+    "summary": "Summary",
+    "backlog": "Backlog",
     "board": "Board",
     "timeline": "Timeline"
   },
   "preferences": {
+    "settings": "Settings",
+    "description": "Adjust the interface language and visual theme.",
     "language": "Language",
+    "languageDescription": "Choose the interface language.",
     "theme": "Theme",
+    "themeDescription": "Preview and apply a theme card.",
     "locale": {
       "zh-CN": "中文",
       "en-US": "English"
     },
     "themeOption": {
-      "light": "Light",
-      "dark": "Dark",
-      "system": "System"
+      "light": "Vercel Light",
+      "dark": "Vercel Dark"
     }
   },
   "board": {
     "title": "Board",
-    "description": "Move tasks through each stage of delivery.",
+    "description": "Track the active sprint and move work through delivery.",
     "loading": "Loading board…",
     "columnsLabel": "Task status columns",
     "columnCount": "{{status}}, {{count}} tasks",
@@ -37,8 +42,11 @@
   "task": {
     "actions": {
       "create": "New task",
+      "createWorkItem": "Create",
+      "createAnother": "Create another",
       "save": "Save task",
       "saving": "Saving…",
+      "clearDate": "Clear date",
       "cancel": "Cancel",
       "close": "Close task editor",
       "delete": "Delete task",
@@ -55,13 +63,34 @@
     },
     "fields": {
       "id": "Task ID",
-      "title": "Title",
+      "project": "Project",
+      "workType": "Work type",
+      "title": "Summary",
       "description": "Description",
       "status": "Status",
       "priority": "Priority",
       "assignee": "Assignee",
+      "reporter": "Reporter",
+      "parent": "Parent",
+      "labels": "Labels",
+      "sprint": "Sprint",
+      "storyPoints": "Story points",
       "startDate": "Start date",
       "dueDate": "Due date"
+    },
+    "workType": {
+      "task": "Task",
+      "story": "Story",
+      "bug": "Bug",
+      "epic": "Epic"
+    },
+    "sections": {
+      "details": "Details",
+      "detailsHint": "Assignment, planning, and reporting"
+    },
+    "placeholders": {
+      "description": "Add context, acceptance criteria, or reproduction steps…",
+      "labels": "Enter labels separated by commas"
     },
     "status": {
       "todo": "To Do",
@@ -75,6 +104,10 @@
       "high": "High priority"
     },
     "unassigned": "Unassigned",
+    "datePlaceholder": "Choose a date",
+    "noParent": "No parent",
+    "backlog": "Backlog",
+    "activeSprint": "ForceTrack Sprint 1",
     "characterCount": "{{count}} / 2,000 characters",
     "list": {
       "title": "Tasks",
@@ -103,13 +136,101 @@
     "descriptionTooLong": "Keep the description to 2,000 characters or fewer.",
     "invalidDate": "Enter a valid calendar date.",
     "dateRange": "Due date cannot be earlier than start date.",
-    "unknownAssignee": "Choose a member from the list."
+    "unknownAssignee": "Choose a member from the list.",
+    "unknownReporter": "Choose a reporter from the list.",
+    "invalidParent": "Parent must be an existing epic.",
+    "invalidLabels": "Add no more than 10 labels of up to 50 characters each.",
+    "invalidStoryPoints": "Story points must be a whole number from 0 to 100."
+  },
+  "summary": {
+    "title": "Summary",
+    "description": "See project health across status, priority, and team workload.",
+    "created": "Created in 7 days",
+    "updated": "Updated in 7 days",
+    "completed": "Completed in 7 days",
+    "dueSoon": "Due in next 7 days",
+    "statusOverview": "Status overview",
+    "priorityBreakdown": "Priority breakdown",
+    "teamWorkload": "Team workload",
+    "recentActivity": "Recent activity",
+    "noActivity": "No recent activity yet.",
+    "unassigned": "Unassigned"
+  },
+  "backlog": {
+    "title": "Backlog",
+    "description": "Rank future work and decide what enters the active sprint.",
+    "activeSprint": "ForceTrack Sprint 1",
+    "backlog": "Backlog",
+    "activeSprintHint": "Work currently visible on the Board",
+    "backlogHint": "Work not yet committed to a sprint",
+    "plannedSprintHint": "A planned sprint that has not started",
+    "itemCount": "{{count}} work items",
+    "search": "Search summary or key",
+    "add": "Add work item",
+    "emptySprint": "No work is planned for the active sprint.",
+    "emptyBacklog": "Your backlog is clear.",
+    "dnd": {
+      "instructions": "To pick up a work item, press Space. Use the arrow keys to choose a sprint or the backlog, then press Space to drop, or Escape to cancel.",
+      "pickedUp": "Picked up {{title}}.",
+      "over": "{{title}} is over {{target}}.",
+      "dropped": "Moved {{title}} to {{target}}.",
+      "cancelled": "Work item move cancelled."
+    }
+  },
+  "sprint": {
+    "createTitle": "Create sprint",
+    "createDescription": "Create a planning container, then schedule work from the backlog.",
+    "startTitle": "Start sprint",
+    "startDescription": "Confirm the schedule before starting {{name}}.",
+    "completeTitle": "Complete sprint",
+    "completeDescription": "Complete {{name}}? {{count}} incomplete work items will return to the Backlog.",
+    "fields": {
+      "name": "Sprint name",
+      "goal": "Sprint goal",
+      "startDate": "Start date",
+      "endDate": "End date"
+    },
+    "actions": {
+      "create": "Create sprint",
+      "start": "Start sprint",
+      "complete": "Complete sprint",
+      "confirmComplete": "Complete"
+    },
+    "validation": {
+      "name_required": "Enter a sprint name.",
+      "name_too_long": "Keep the sprint name to 80 characters or fewer.",
+      "goal_too_long": "Keep the sprint goal to 500 characters or fewer.",
+      "invalid_date": "Enter a valid date.",
+      "invalid_range": "End date cannot be earlier than start date.",
+      "dates_required": "Choose both a start date and an end date before starting the sprint.",
+      "invalid_status": "This sprint can no longer be started.",
+      "active_exists": "Complete the active sprint before starting another one.",
+      "empty_sprint": "Add at least one work item before starting the sprint.",
+      "invalid_target": "Choose an available future sprint or the Backlog."
+    }
+  },
+  "member": {
+    "createTitle": "Add member",
+    "createDescription": "New members can immediately be selected as assignee or reporter.",
+    "fields": {
+      "name": "Name",
+      "email": "Email"
+    },
+    "actions": {
+      "add": "Add member"
+    },
+    "validation": {
+      "invalid": "Enter a name and a valid, unused email address."
+    }
   },
   "timeline": {
     "title": "Timeline",
-    "description": "Review scheduled work across a shared calendar.",
-    "emptyTitle": "Your timeline is ready",
-    "emptyDescription": "Scheduled task bars arrive in Task 6."
+    "description": "Review work by start date, due date, and delivery window.",
+    "emptyTitle": "No scheduled work yet",
+    "emptyDescription": "Add a start date or due date to a work item to place it here.",
+    "today": "Today",
+    "unscheduled": "{{count}} work items are unscheduled",
+    "dateRange": "Next four weeks"
   },
   "a11y": {
     "forceTrackHome": "ForceTrack board",

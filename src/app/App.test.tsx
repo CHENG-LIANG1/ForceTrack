@@ -1,5 +1,5 @@
 /** Component-level acceptance coverage for the Task 2 shell, routes, locale, and theme controls. */
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from '@/app/App';
@@ -76,17 +76,20 @@ describe('App shell', () => {
       locale: 'en-US',
       theme: 'dark',
     });
-    const languageSelect = await screen.findByRole('combobox', {
-      name: 'Language',
+    const settingsButton = await screen.findByRole('button', {
+      name: 'Settings',
     });
-    const themeSelect = screen.getByRole('combobox', { name: 'Theme' });
-
-    await waitFor(() => expect(languageSelect).toBeEnabled());
+    await user.click(settingsButton);
+    const chineseButton = screen.getByRole('button', { name: '中文' });
+    const lightThemeButton = screen.getByRole('button', {
+      name: 'Vercel Light',
+    });
+    await waitFor(() => expect(chineseButton).toBeEnabled());
     expect(document.documentElement).toHaveAttribute('lang', 'en-US');
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
 
-    await user.selectOptions(languageSelect, 'zh-CN');
-    await user.selectOptions(themeSelect, 'light');
+    await user.click(chineseButton);
+    await user.click(lightThemeButton);
 
     expect(
       screen.getByRole('heading', { name: '看板', level: 1 }),
@@ -101,43 +104,24 @@ describe('App shell', () => {
     );
   });
 
-  it('updates the effective theme when the system color scheme changes', async () => {
-    let matches = false;
-    const listeners = new Set<() => void>();
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(
-        () =>
-          ({
-            get matches() {
-              return matches;
-            },
-            media: '(prefers-color-scheme: dark)',
-            onchange: null,
-            addEventListener: (
-              _type: string,
-              listener: EventListenerOrEventListenerObject,
-            ) => listeners.add(listener as () => void),
-            removeEventListener: (
-              _type: string,
-              listener: EventListenerOrEventListenerObject,
-            ) => listeners.delete(listener as () => void),
-            addListener: vi.fn(),
-            removeListener: vi.fn(),
-            dispatchEvent: vi.fn(),
-          }) as MediaQueryList,
-      ),
+  it('shows two previewable Vercel themes and closes settings with Escape', async () => {
+    const user = userEvent.setup();
+    renderApp('/board', { locale: 'en-US', theme: 'dark' });
+
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Vercel Dark' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
     );
+    expect(screen.getByRole('button', { name: 'Vercel Light' })).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: /System/ }),
+    ).not.toBeInTheDocument();
 
-    renderApp('/board', { locale: 'en-US', theme: 'system' });
-    await screen.findByRole('heading', { name: 'Board' });
-    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
-
-    matches = true;
-    act(() => listeners.forEach((listener) => listener()));
-
-    await waitFor(() =>
-      expect(document.documentElement).toHaveAttribute('data-theme', 'dark'),
-    );
+    await user.keyboard('{Escape}');
+    expect(
+      screen.queryByRole('dialog', { name: 'Settings' }),
+    ).not.toBeInTheDocument();
   });
 });

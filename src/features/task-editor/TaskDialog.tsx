@@ -1,18 +1,35 @@
-import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { type RefObject, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { Member } from '@/domain/member';
+import type { Sprint } from '@/domain/sprint';
 import type { Task, TaskFields, TaskStatus } from '@/domain/task';
 import { TaskForm } from '@/features/task-editor/TaskForm';
 
 interface TaskDialogProps {
   open: boolean;
   task: Task | null;
+  tasks: readonly Task[];
+  sprints: readonly Sprint[];
   initialStatus?: TaskStatus;
+  initialSprintId?: string | null;
   members: readonly Member[];
   returnFocusRef?: RefObject<HTMLElement | null>;
   onOpenChange(open: boolean): void;
@@ -20,11 +37,14 @@ interface TaskDialogProps {
   onDelete?(): Promise<void>;
 }
 
-/** Radix dialog preserves focus while nested confirmations guard destructive exits. */
+/** The shadcn dialog layer preserves focus while nested confirmations guard destructive exits. */
 export function TaskDialog({
   open,
   task,
+  tasks,
+  sprints,
   initialStatus,
+  initialSprintId,
   members,
   returnFocusRef,
   onOpenChange,
@@ -54,9 +74,10 @@ export function TaskDialog({
     else requestClose();
   };
 
-  const handleSave = async (fields: TaskFields) => {
+  const handleSave = async (fields: TaskFields, createAnother: boolean) => {
     await onSave(fields);
-    closeWithoutGuard();
+    if (!createAnother) closeWithoutGuard();
+    else dirtyRef.current = false;
   };
 
   const handleDelete = async () => {
@@ -68,105 +89,102 @@ export function TaskDialog({
 
   return (
     <>
-      <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content
-            className="task-dialog-content"
-            onCloseAutoFocus={(event) => {
-              if (!returnFocusRef?.current) return;
-              event.preventDefault();
-              returnFocusRef.current.focus();
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            if (!returnFocusRef?.current) return;
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }}
+        >
+          <div className="task-dialog-heading">
+            <div>
+              <DialogTitle>
+                {task
+                  ? t('task.dialog.editTitle')
+                  : t('task.dialog.createTitle')}
+              </DialogTitle>
+              <DialogDescription>
+                {task
+                  ? t('task.dialog.editDescription')
+                  : t('task.dialog.createDescription')}
+              </DialogDescription>
+            </div>
+            <DialogClose asChild>
+              <Button
+                className="icon-button"
+                variant="unstyled"
+                type="button"
+                aria-label={t('task.actions.close')}
+              >
+                <X size={18} />
+              </Button>
+            </DialogClose>
+          </div>
+
+          <TaskForm
+            key={task?.id ?? 'new-task'}
+            task={task}
+            tasks={tasks}
+            sprints={sprints}
+            initialStatus={initialStatus}
+            initialSprintId={initialSprintId}
+            members={members}
+            onSubmit={handleSave}
+            onCancel={requestClose}
+            onDelete={onDelete ? () => setDeleteOpen(true) : undefined}
+            onDirtyChange={(dirty) => {
+              dirtyRef.current = dirty;
             }}
-          >
-            <div className="task-dialog-heading">
-              <div>
-                <Dialog.Title>
-                  {task
-                    ? t('task.dialog.editTitle')
-                    : t('task.dialog.createTitle')}
-                </Dialog.Title>
-                <Dialog.Description>
-                  {task
-                    ? t('task.dialog.editDescription')
-                    : t('task.dialog.createDescription')}
-                </Dialog.Description>
-              </div>
-              <Dialog.Close asChild>
-                <button
-                  className="icon-button"
-                  type="button"
-                  aria-label={t('task.actions.close')}
-                >
-                  <X size={18} />
-                </button>
-              </Dialog.Close>
-            </div>
+          />
+        </DialogContent>
+      </Dialog>
 
-            <TaskForm
-              key={task?.id ?? 'new-task'}
-              task={task}
-              initialStatus={initialStatus}
-              members={members}
-              onSubmit={handleSave}
-              onCancel={requestClose}
-              onDelete={onDelete ? () => setDeleteOpen(true) : undefined}
-              onDirtyChange={(dirty) => {
-                dirtyRef.current = dirty;
-              }}
-            />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{t('task.discard.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('task.discard.description')}
+          </AlertDialogDescription>
+          <div className="confirmation-actions">
+            <AlertDialogCancel asChild>
+              <Button variant="outline" size="dialog">
+                {t('task.actions.keepEditing')}
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button size="dialog" onClick={closeWithoutGuard}>
+                {t('task.actions.discard')}
+              </Button>
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <AlertDialog.Root open={discardOpen} onOpenChange={setDiscardOpen}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="dialog-overlay dialog-overlay-raised" />
-          <AlertDialog.Content className="confirmation-dialog-content">
-            <AlertDialog.Title>{t('task.discard.title')}</AlertDialog.Title>
-            <AlertDialog.Description>
-              {t('task.discard.description')}
-            </AlertDialog.Description>
-            <div className="confirmation-actions">
-              <AlertDialog.Cancel asChild>
-                <Button variant="outline">
-                  {t('task.actions.keepEditing')}
-                </Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button onClick={closeWithoutGuard}>
-                  {t('task.actions.discard')}
-                </Button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
-
-      <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="dialog-overlay dialog-overlay-raised" />
-          <AlertDialog.Content className="confirmation-dialog-content">
-            <AlertDialog.Title>{t('task.delete.title')}</AlertDialog.Title>
-            <AlertDialog.Description>
-              {t('task.delete.description', { title: task?.title })}
-            </AlertDialog.Description>
-            <div className="confirmation-actions">
-              <AlertDialog.Cancel asChild>
-                <Button variant="outline">{t('task.actions.cancel')}</Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button
-                  className="danger-primary-button"
-                  onClick={handleDelete}
-                >
-                  {t('task.actions.confirmDelete')}
-                </Button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{t('task.delete.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('task.delete.description', { title: task?.title })}
+          </AlertDialogDescription>
+          <div className="confirmation-actions">
+            <AlertDialogCancel asChild>
+              <Button variant="outline" size="dialog">
+                {t('task.actions.cancel')}
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                className="danger-primary-button"
+                size="dialog"
+                onClick={handleDelete}
+              >
+                {t('task.actions.confirmDelete')}
+              </Button>
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
