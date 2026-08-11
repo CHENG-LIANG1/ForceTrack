@@ -3,6 +3,7 @@ import { CalendarDays } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
 import type { Member } from '@/domain/member';
 import type { Task } from '@/domain/task';
 import { cn } from '@/lib/utils';
@@ -87,10 +88,11 @@ export function TaskCard({ task, member, onOpen }: TaskCardProps) {
 
   return (
     <li ref={setNodeRef} style={style} className="task-card-slot">
-      <button
+      <Button
         {...attributes}
         {...listeners}
         type="button"
+        variant="unstyled"
         className={cn('task-card', isDragging && 'task-card-dragging')}
         data-testid={`task-card-${task.id}`}
         aria-label={t('task.actions.editLabel', {
@@ -103,7 +105,7 @@ export function TaskCard({ task, member, onOpen }: TaskCardProps) {
         }}
       >
         <TaskCardContent task={task} member={member} />
-      </button>
+      </Button>
     </li>
   );
 }

@@ -1,14 +1,15 @@
 import type { UserPreferences } from '@/domain/member';
-import type { TaskSnapshotV1 } from '@/domain/task';
+import type { TaskSnapshotV2 } from '@/domain/task';
 
 export type LoadResult =
-  | { kind: 'loaded'; snapshot: TaskSnapshotV1 }
-  | { kind: 'seeded'; snapshot: TaskSnapshotV1 }
-  | { kind: 'recovered'; snapshot: TaskSnapshotV1 };
+  | { kind: 'loaded'; snapshot: TaskSnapshotV2 }
+  | { kind: 'migrated'; snapshot: TaskSnapshotV2 }
+  | { kind: 'seeded'; snapshot: TaskSnapshotV2 }
+  | { kind: 'recovered'; snapshot: TaskSnapshotV2 };
 
 export interface TaskRepository {
   load(): Promise<LoadResult>;
-  save(snapshot: TaskSnapshotV1): Promise<void>;
+  save(snapshot: TaskSnapshotV2): Promise<void>;
 }
 
 export interface PreferencesRepository {

@@ -20,7 +20,8 @@ The current repository includes:
 - Playwright smoke coverage for Chromium at 1280 × 720
 - `/board` and `/timeline` routes with fallback redirects
 - Persisted Chinese/English locale switching
-- Persisted light/dark/system themes built on semantic color tokens
+- Persisted Vercel Light/Dark theme cards built on semantic color tokens,
+  defaulting to Vercel Dark
 - A responsive application shell with route-aware navigation
 - A shared task state provider with serialized local persistence
 - A Radix task editor with create, edit, status updates, deletion, validation,

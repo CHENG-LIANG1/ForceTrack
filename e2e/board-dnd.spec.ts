@@ -30,7 +30,7 @@ async function dragCardToColumn(
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('forcetrack:dnd-test-initialized')) {
-      localStorage.removeItem('forcetrack:tasks:v1');
+      localStorage.removeItem('forcetrack:tasks:v2');
       localStorage.setItem(
         'forcetrack:preferences:v1',
         JSON.stringify({ locale: 'en-US', theme: 'light' }),
@@ -50,17 +50,17 @@ test('moves a task across columns and preserves its status after reload', async 
   });
   const doneColumn = page.getByTestId('board-column-done');
   await expect(card).toBeVisible();
-  await expect(doneColumn.getByLabel('Done, 2 tasks')).toBeVisible();
+  await expect(doneColumn.getByLabel('Done, 1 tasks')).toBeVisible();
 
   await dragCardToColumn(page, card, doneColumn);
 
   await expect(
     doneColumn.getByRole('button', { name: /Edit FT-1:/ }),
   ).toBeVisible();
-  await expect(doneColumn.getByLabel('Done, 3 tasks')).toBeVisible();
+  await expect(doneColumn.getByLabel('Done, 2 tasks')).toBeVisible();
 
   const storedBeforeReload = await page.evaluate(() => {
-    const raw = localStorage.getItem('forcetrack:tasks:v1');
+    const raw = localStorage.getItem('forcetrack:tasks:v2');
     if (!raw) return null;
     return (
       JSON.parse(raw) as {
@@ -78,7 +78,7 @@ test('moves a task across columns and preserves its status after reload', async 
   ).toBeVisible();
 
   const storedTask = await page.evaluate(() => {
-    const raw = localStorage.getItem('forcetrack:tasks:v1');
+    const raw = localStorage.getItem('forcetrack:tasks:v2');
     if (!raw) return null;
     return (
       JSON.parse(raw) as {
@@ -95,7 +95,7 @@ test('supports moving a focused task with the keyboard sensor', async ({
   await page.goto('/board');
 
   const card = page.getByRole('button', {
-    name: /Edit FT-2: Prepare usability test script/,
+    name: /Edit FT-1: Define MVP acceptance criteria/,
   });
   await card.focus();
   await page.keyboard.press('Space');
@@ -113,6 +113,6 @@ test('supports moving a focused task with the keyboard sensor', async ({
   await expect(
     page
       .getByTestId('board-column-in_progress')
-      .getByRole('button', { name: /Edit FT-2:/ }),
+      .getByRole('button', { name: /Edit FT-1:/ }),
   ).toBeVisible();
 });

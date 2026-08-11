@@ -46,40 +46,26 @@ test('navigates both routes, redirects fallbacks, and avoids horizontal overflow
   expect(pageErrors).toEqual([]);
 });
 
-test('persists locale and explicit theme across reloads', async ({ page }) => {
-  await page.goto('/board');
-  const languageSelect = page.getByRole('combobox', {
-    name: /Language|语言/,
-  });
-  const themeSelect = page.getByRole('combobox', { name: /Theme|主题/ });
-
-  await expect(languageSelect).toBeEnabled();
-  await languageSelect.selectOption('en-US');
-  await themeSelect.selectOption('dark');
-
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.reload();
-
-  await expect(
-    page.getByRole('heading', { name: 'Board', level: 1 }),
-  ).toBeVisible();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await expect(languageSelect).toHaveValue('en-US');
-  await expect(themeSelect).toHaveValue('dark');
-});
-
-test('system theme follows the emulated browser color scheme', async ({
+test('defaults to Vercel Dark and persists settings across reloads', async ({
   page,
 }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/board');
-  const themeSelect = page.getByRole('combobox', { name: /Theme|主题/ });
-  await expect(themeSelect).toBeEnabled();
-  await themeSelect.selectOption('system');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-
-  await page.emulateMedia({ colorScheme: 'light' });
+  await page.getByRole('button', { name: /Settings|设置/ }).click();
+  await expect(page.locator('.theme-preview')).toHaveCount(2);
+  await expect(
+    page.getByRole('button', { name: 'Vercel Dark' }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'English' }).click();
+  await page.getByRole('button', { name: 'Vercel Light' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Vercel Light' }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /System/ })).toHaveCount(0);
 });

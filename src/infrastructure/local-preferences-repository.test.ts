@@ -27,7 +27,7 @@ describe('LocalPreferencesRepository', () => {
     expect(detectBrowserLocale('en-GB')).toBe('en-US');
     expect(createDefaultPreferences('fr-FR')).toEqual({
       locale: 'en-US',
-      theme: 'system',
+      theme: 'dark',
     });
   });
 
@@ -54,15 +54,32 @@ describe('LocalPreferencesRepository', () => {
     });
   });
 
+  it('migrates the removed system preference to dark without losing locale', async () => {
+    const storage = new MemoryStorage();
+    storage.values.set(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ locale: 'zh-CN', theme: 'system' }),
+    );
+
+    await expect(
+      new LocalPreferencesRepository(storage).load(),
+    ).resolves.toEqual({ locale: 'zh-CN', theme: 'dark' });
+    expect(JSON.parse(storage.values.get(PREFERENCES_STORAGE_KEY)!)).toEqual({
+      locale: 'zh-CN',
+      theme: 'dark',
+    });
+    expect(storage.values.has(RECOVERY_STORAGE_KEY)).toBe(false);
+  });
+
   it('backs up invalid data and restores defaults', async () => {
     const storage = new MemoryStorage();
     const invalidRaw = JSON.stringify({ locale: 'fr', theme: 'neon' });
     storage.values.set(PREFERENCES_STORAGE_KEY, invalidRaw);
-    const defaults = { locale: 'zh-CN', theme: 'system' } as const;
+    const defaults = { locale: 'zh-CN', theme: 'dark' } as const;
 
     await expect(
       new LocalPreferencesRepository(storage, defaults).load(),
-    ).resolves.toEqual({ locale: 'zh-CN', theme: 'system' });
+    ).resolves.toEqual({ locale: 'zh-CN', theme: 'dark' });
     expect(storage.values.get(RECOVERY_STORAGE_KEY)).toBe(invalidRaw);
   });
 
@@ -73,7 +90,7 @@ describe('LocalPreferencesRepository', () => {
     await expect(
       new LocalPreferencesRepository(storage).save({
         locale: 'en-US',
-        theme: 'system',
+        theme: 'dark',
       }),
     ).rejects.toMatchObject({ operation: 'write' });
   });

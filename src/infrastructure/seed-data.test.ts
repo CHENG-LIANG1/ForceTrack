@@ -1,5 +1,5 @@
 import { createSeedSnapshot } from '@/infrastructure/seed-data';
-import { taskSnapshotV1Schema } from '@/infrastructure/storage-schema';
+import { taskSnapshotV2Schema } from '@/infrastructure/storage-schema';
 import { makeDependencies } from '@/test/fixtures';
 
 describe('createSeedSnapshot', () => {
@@ -15,7 +15,7 @@ describe('createSeedSnapshot', () => {
       ]),
     );
 
-    expect(taskSnapshotV1Schema.safeParse(snapshot).success).toBe(true);
+    expect(taskSnapshotV2Schema.safeParse(snapshot).success).toBe(true);
     expect(snapshot.tasks).toHaveLength(6);
     expect(snapshot.nextTaskNumber).toBe(7);
     expect(new Set(snapshot.tasks.map((task) => task.id)).size).toBe(6);

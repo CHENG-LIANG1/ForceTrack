@@ -1,25 +1,30 @@
 {
   "nav": {
     "primary": "主导航",
+    "summary": "Summary",
+    "backlog": "Backlog",
     "board": "看板",
     "timeline": "时间线"
   },
   "preferences": {
+    "settings": "设置",
+    "description": "调整界面语言与视觉主题。",
     "language": "语言",
+    "languageDescription": "选择界面显示语言。",
     "theme": "主题",
+    "themeDescription": "选择一张卡片预览并应用主题。",
     "locale": {
       "zh-CN": "中文",
       "en-US": "English"
     },
     "themeOption": {
-      "light": "浅色",
-      "dark": "深色",
-      "system": "跟随系统"
+      "light": "Vercel Light",
+      "dark": "Vercel Dark"
     }
   },
   "board": {
     "title": "看板",
-    "description": "推动任务依次通过交付流程的各个阶段。",
+    "description": "查看当前 Sprint，并推动工作项通过交付流程。",
     "loading": "正在加载看板…",
     "columnsLabel": "任务状态列",
     "columnCount": "{{status}}，{{count}} 个任务",
@@ -37,8 +42,11 @@
   "task": {
     "actions": {
       "create": "新建任务",
+      "createWorkItem": "创建",
+      "createAnother": "继续创建另一项",
       "save": "保存任务",
       "saving": "正在保存…",
+      "clearDate": "清除日期",
       "cancel": "取消",
       "close": "关闭任务编辑器",
       "delete": "删除任务",
@@ -55,13 +63,34 @@
     },
     "fields": {
       "id": "任务编号",
-      "title": "标题",
+      "project": "项目",
+      "workType": "工作类型",
+      "title": "Summary",
       "description": "描述",
       "status": "状态",
       "priority": "优先级",
       "assignee": "负责人",
+      "reporter": "报告人",
+      "parent": "父级",
+      "labels": "标签",
+      "sprint": "Sprint",
+      "storyPoints": "Story points",
       "startDate": "开始日期",
       "dueDate": "截止日期"
+    },
+    "workType": {
+      "task": "任务",
+      "story": "故事",
+      "bug": "缺陷",
+      "epic": "Epic"
+    },
+    "sections": {
+      "details": "详细信息",
+      "detailsHint": "用于分派、规划和报告"
+    },
+    "placeholders": {
+      "description": "补充背景、验收标准或复现步骤…",
+      "labels": "输入标签，用逗号分隔"
     },
     "status": {
       "todo": "待办",
@@ -75,6 +104,10 @@
       "high": "高优先级"
     },
     "unassigned": "未分配",
+    "datePlaceholder": "选择日期",
+    "noParent": "无父级",
+    "backlog": "Backlog",
+    "activeSprint": "ForceTrack Sprint 1",
     "characterCount": "{{count}} / 2,000 字",
     "list": {
       "title": "任务",
@@ -103,13 +136,101 @@
     "descriptionTooLong": "描述不能超过 2,000 个字符。",
     "invalidDate": "请输入有效的日历日期。",
     "dateRange": "截止日期不能早于开始日期。",
-    "unknownAssignee": "请选择列表中的成员。"
+    "unknownAssignee": "请选择列表中的成员。",
+    "unknownReporter": "请选择列表中的报告人。",
+    "invalidParent": "父级必须是现有 Epic。",
+    "invalidLabels": "最多添加 10 个标签，每个标签不超过 50 个字符。",
+    "invalidStoryPoints": "Story points 必须是 0 到 100 的整数。"
+  },
+  "summary": {
+    "title": "Summary",
+    "description": "从状态、优先级和团队负载了解项目健康度。",
+    "created": "近 7 天创建",
+    "updated": "近 7 天更新",
+    "completed": "近 7 天完成",
+    "dueSoon": "未来 7 天到期",
+    "statusOverview": "状态概览",
+    "priorityBreakdown": "优先级分布",
+    "teamWorkload": "团队负载",
+    "recentActivity": "近期活动",
+    "noActivity": "暂无近期活动。",
+    "unassigned": "未分配"
+  },
+  "backlog": {
+    "title": "Backlog",
+    "description": "排序未来工作，并决定哪些工作进入当前 Sprint。",
+    "activeSprint": "ForceTrack Sprint 1",
+    "backlog": "Backlog",
+    "activeSprintHint": "当前在 Board 中显示的工作项",
+    "backlogHint": "尚未承诺进入 Sprint 的工作项",
+    "plannedSprintHint": "尚未开始的计划 Sprint",
+    "itemCount": "{{count}} 个工作项",
+    "search": "搜索 Summary 或任务编号",
+    "add": "添加工作项",
+    "emptySprint": "当前 Sprint 还没有工作项。",
+    "emptyBacklog": "Backlog 已清空。",
+    "dnd": {
+      "instructions": "按空格键拿起工作项，使用方向键选择 Sprint 或 Backlog，再按空格键放下，或按 Escape 取消。",
+      "pickedUp": "已拿起{{title}}。",
+      "over": "{{title}}位于{{target}}上方。",
+      "dropped": "已将{{title}}移至{{target}}。",
+      "cancelled": "已取消移动工作项。"
+    }
+  },
+  "sprint": {
+    "createTitle": "新建 Sprint",
+    "createDescription": "创建一个规划容器，然后从 Backlog 安排工作项。",
+    "startTitle": "开始 Sprint",
+    "startDescription": "开始 {{name}} 前，请确认 Sprint 日期。",
+    "completeTitle": "完成 Sprint",
+    "completeDescription": "确定完成 {{name}}？{{count}} 个未完成工作项将退回 Backlog。",
+    "fields": {
+      "name": "Sprint 名称",
+      "goal": "Sprint 目标",
+      "startDate": "开始日期",
+      "endDate": "结束日期"
+    },
+    "actions": {
+      "create": "新建 Sprint",
+      "start": "开始 Sprint",
+      "complete": "完成 Sprint",
+      "confirmComplete": "完成"
+    },
+    "validation": {
+      "name_required": "请输入 Sprint 名称。",
+      "name_too_long": "Sprint 名称不能超过 80 个字符。",
+      "goal_too_long": "Sprint 目标不能超过 500 个字符。",
+      "invalid_date": "请输入有效日期。",
+      "invalid_range": "结束日期不能早于开始日期。",
+      "dates_required": "开始 Sprint 前必须选择开始日期和结束日期。",
+      "invalid_status": "该 Sprint 已无法开始。",
+      "active_exists": "请先完成当前进行中的 Sprint。",
+      "empty_sprint": "开始 Sprint 前请至少添加一个工作项。",
+      "invalid_target": "请选择可用的未来 Sprint 或 Backlog。"
+    }
+  },
+  "member": {
+    "createTitle": "添加成员",
+    "createDescription": "添加后，该成员可立即成为负责人或报告人。",
+    "fields": {
+      "name": "姓名",
+      "email": "邮箱"
+    },
+    "actions": {
+      "add": "添加成员"
+    },
+    "validation": {
+      "invalid": "请输入姓名和有效且未使用的邮箱。"
+    }
   },
   "timeline": {
     "title": "时间线",
-    "description": "在共享日历中查看已排期的工作。",
-    "emptyTitle": "时间线已准备就绪",
-    "emptyDescription": "排期任务条将在 Task 6 中实现。"
+    "description": "按起止日期查看工作排期与交付窗口。",
+    "emptyTitle": "还没有已排期的工作",
+    "emptyDescription": "为工作项添加开始日期或截止日期，它就会出现在这里。",
+    "today": "今天",
+    "unscheduled": "{{count}} 个工作项尚未排期",
+    "dateRange": "未来四周"
   },
   "a11y": {
     "forceTrackHome": "ForceTrack 看板",

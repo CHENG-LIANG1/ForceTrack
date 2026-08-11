@@ -19,6 +19,7 @@ import { useTasks } from '@/app/task-context';
 import { Button } from '@/components/ui/button';
 import { TASK_STATUSES, type TaskStatus } from '@/domain/task';
 import { BoardColumn } from '@/features/board/BoardColumn';
+import { selectActiveSprintTasks } from '@/features/board/board-selectors';
 import {
   boardKeyboardCoordinates,
   orderedTasksForStatus,
@@ -61,6 +62,10 @@ export function BoardPage() {
   );
   const selectedTask =
     snapshot?.tasks.find((task) => task.id === editor.taskId) ?? null;
+  const boardTasks = useMemo(
+    () => (snapshot ? selectActiveSprintTasks(snapshot) : []),
+    [snapshot],
+  );
   const activeTask =
     snapshot?.tasks.find((task) => task.id === activeTaskId) ?? null;
   const activeMember =
@@ -80,9 +85,9 @@ export function BoardPage() {
   const targetStatus = useCallback(
     (overId: string | null): TaskStatus | null => {
       if (!snapshot || !overId) return null;
-      return resolveBoardDropTarget(snapshot.tasks, overId)?.status ?? null;
+      return resolveBoardDropTarget(boardTasks, overId)?.status ?? null;
     },
-    [snapshot],
+    [boardTasks, snapshot],
   );
 
   const announcements: Announcements = useMemo(
@@ -145,14 +150,14 @@ export function BoardPage() {
 
     const taskId = String(active.id);
     const movingTask = snapshot.tasks.find((task) => task.id === taskId);
-    const target = resolveBoardDropTarget(snapshot.tasks, String(over.id));
+    const target = resolveBoardDropTarget(boardTasks, String(over.id));
     if (!movingTask || !target) {
       resetDragState();
       return;
     }
 
     const targetLength = orderedTasksForStatus(
-      snapshot.tasks,
+      boardTasks,
       target.status,
     ).length;
     const maximumIndex =
@@ -171,7 +176,7 @@ export function BoardPage() {
   return (
     <section className="workspace-page" aria-labelledby="board-title">
       <div className="board-heading-row">
-        <div className="page-heading">
+        <div className="page-heading compact-page-heading">
           <p className="page-kicker">ForceTrack / Board</p>
           <h1 id="board-title">{t('board.title')}</h1>
           <p>{t('board.description')}</p>
@@ -222,7 +227,7 @@ export function BoardPage() {
                 <BoardColumn
                   key={status}
                   status={status}
-                  tasks={orderedTasksForStatus(snapshot.tasks, status)}
+                  tasks={orderedTasksForStatus(boardTasks, status)}
                   members={snapshot.members}
                   isDropTarget={overStatus === status}
                   onCreate={openCreate}
@@ -244,7 +249,13 @@ export function BoardPage() {
         <TaskDialog
           open={editor.open}
           task={selectedTask}
+          tasks={snapshot.tasks}
+          sprints={snapshot.sprints}
           initialStatus={editor.createStatus}
+          initialSprintId={
+            snapshot.sprints.find((sprint) => sprint.status === 'active')?.id ??
+            null
+          }
           members={snapshot.members}
           returnFocusRef={editorTriggerRef}
           onOpenChange={(open) =>
