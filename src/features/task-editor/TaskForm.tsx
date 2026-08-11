@@ -9,11 +9,13 @@ import {
   validateTaskFields,
   type Task,
   type TaskFields,
+  type TaskStatus,
   type TaskValidationIssue,
 } from '@/domain/task';
 
 interface TaskFormProps {
   task: Task | null;
+  initialStatus?: TaskStatus;
   members: readonly Member[];
   onSubmit(fields: TaskFields): Promise<void>;
   onCancel(): void;
@@ -21,7 +23,10 @@ interface TaskFormProps {
   onDirtyChange(dirty: boolean): void;
 }
 
-function initialFields(task: Task | null): TaskFields {
+function initialFields(
+  task: Task | null,
+  initialStatus: TaskStatus,
+): TaskFields {
   if (task) {
     return {
       title: task.title,
@@ -37,7 +42,7 @@ function initialFields(task: Task | null): TaskFields {
   return {
     title: '',
     description: '',
-    status: 'todo',
+    status: initialStatus,
     priority: 'medium',
     assigneeId: null,
     startDate: null,
@@ -76,6 +81,7 @@ function validationMessageKey(issue: TaskValidationIssue): string {
 /** Controlled editor that keeps validation and dirty-state semantics close to the draft. */
 export function TaskForm({
   task,
+  initialStatus = 'todo',
   members,
   onSubmit,
   onCancel,
@@ -83,7 +89,10 @@ export function TaskForm({
   onDirtyChange,
 }: TaskFormProps) {
   const { t } = useTranslation();
-  const baseline = useMemo(() => initialFields(task), [task]);
+  const baseline = useMemo(
+    () => initialFields(task, initialStatus),
+    [initialStatus, task],
+  );
   const [draft, setDraft] = useState<TaskFields>(baseline);
   const [issues, setIssues] = useState<TaskValidationIssue[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);

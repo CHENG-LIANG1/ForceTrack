@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 
 import type {
   CreateTaskInput,
+  TaskStatus,
   TaskSnapshotV1,
   UpdateTaskInput,
 } from '@/domain/task';
@@ -14,6 +15,11 @@ export interface TaskContextValue {
   createTask(input: CreateTaskInput): Promise<void>;
   updateTask(taskId: string, input: UpdateTaskInput): Promise<void>;
   deleteTask(taskId: string): Promise<void>;
+  moveTask(
+    taskId: string,
+    toStatus: TaskStatus,
+    toIndex: number,
+  ): Promise<void>;
 }
 
 export const TaskContext = createContext<TaskContextValue | null>(null);

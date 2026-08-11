@@ -6,12 +6,13 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import type { Member } from '@/domain/member';
-import type { Task, TaskFields } from '@/domain/task';
+import type { Task, TaskFields, TaskStatus } from '@/domain/task';
 import { TaskForm } from '@/features/task-editor/TaskForm';
 
 interface TaskDialogProps {
   open: boolean;
   task: Task | null;
+  initialStatus?: TaskStatus;
   members: readonly Member[];
   returnFocusRef?: RefObject<HTMLElement | null>;
   onOpenChange(open: boolean): void;
@@ -23,6 +24,7 @@ interface TaskDialogProps {
 export function TaskDialog({
   open,
   task,
+  initialStatus,
   members,
   returnFocusRef,
   onOpenChange,
@@ -104,6 +106,7 @@ export function TaskDialog({
             <TaskForm
               key={task?.id ?? 'new-task'}
               task={task}
+              initialStatus={initialStatus}
               members={members}
               onSubmit={handleSave}
               onCancel={requestClose}

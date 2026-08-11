@@ -6,8 +6,8 @@ single-page application with local persistence and no backend dependency.
 
 ## Current status
 
-Tasks 0–3 — engineering foundation, domain persistence, application shell, and
-task CRUD — are complete.
+Tasks 0–4 — engineering foundation, domain persistence, application shell,
+task CRUD, and the interactive Board — are complete.
 
 The current repository includes:
 
@@ -25,10 +25,11 @@ The current repository includes:
 - A shared task state provider with serialized local persistence
 - A Radix task editor with create, edit, status updates, deletion, validation,
   and unsaved-change confirmation
-- A temporary task list entry point ahead of the full Board implementation
+- Four persisted Board columns with counts, sortable task cards, empty states,
+  drag overlays, and pointer/keyboard drag-and-drop
 
-Board columns, drag-and-drop, filters, and the Timeline grid will be implemented
-in subsequent tasks. See [PRD.md](./PRD.md) and
+Board filters and the Timeline grid will be implemented in subsequent tasks.
+See [PRD.md](./PRD.md) and
 [TECHNICAL_DESIGN.md](./TECHNICAL_DESIGN.md) for the authoritative scope and
 implementation plan.
 
