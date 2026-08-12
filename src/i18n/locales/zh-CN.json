@@ -160,6 +160,7 @@
     "completed": "近 7 天完成",
     "dueSoon": "未来 7 天到期",
     "statusOverview": "状态概览",
+    "total": "总计",
     "priorityBreakdown": "优先级分布",
     "workTypes": "工作类型",
     "teamWorkload": "团队负载",

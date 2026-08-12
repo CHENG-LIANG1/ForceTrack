@@ -17,8 +17,11 @@ async function chooseDate(
   field: 'Start date' | 'Due date',
   value: string,
 ): Promise<void> {
-  await dialog.getByLabel(field).click();
-  await page.locator(`[data-day="${value}"]`).click();
+  const trigger = dialog.getByLabel(field);
+  await trigger.click();
+  const popoverId = await trigger.getAttribute('aria-controls');
+  if (!popoverId) throw new Error(`${field} popover did not open`);
+  await page.locator(`[id="${popoverId}"] [data-day="${value}"]`).click();
 }
 
 test.beforeEach(async ({ page }) => {

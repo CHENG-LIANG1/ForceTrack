@@ -1,4 +1,45 @@
-/* Semantic tokens are the only color contract consumed by application components. */
+/* Shared visual constants keep spacing, typography, radii, and control sizing coherent. */
+:root {
+  --font-family-sans:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-size-caption: 10px;
+  --font-size-supporting: 11px;
+  --font-size-label: 12px;
+  --font-size-body: 13px;
+  --font-size-panel-title: 14px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-ui: 1.4;
+  --line-height-body: 1.6;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --control-height-compact: 36px;
+  --control-height-default: 42px;
+  --status-todo: var(--muted-foreground);
+  --status-in-progress: var(--accent);
+  --status-in-review: var(--warning);
+  --status-done: var(--success);
+  --work-type-task: var(--accent);
+  --work-type-story: var(--success);
+  --work-type-bug: var(--danger);
+  --work-type-epic: var(--epic);
+}
+
+/* Semantic color tokens are the only color contract consumed by components. */
 :root,
 html[data-theme='light'] {
   color-scheme: light;
@@ -6,11 +47,13 @@ html[data-theme='light'] {
   --foreground: #17191c;
   --surface: #ffffff;
   --surface-raised: #ffffff;
+  --surface-subtle: #f7f8fa;
   --surface-hover: #f0f2f5;
   --muted: #e8eaed;
   --muted-foreground: #656b73;
   --border: #d9dce1;
   --border-strong: #b8bdc5;
+  --control-border: #8b919a;
   --primary: #17191c;
   --primary-foreground: #ffffff;
   --accent: #5267e8;
@@ -18,6 +61,7 @@ html[data-theme='light'] {
   --danger: #c83b46;
   --warning: #a96608;
   --success: #16865a;
+  --epic: #7c3aed;
   --ring: #5267e8;
   --shadow: rgb(20 24 32 / 10%);
   --overlay: rgb(20 24 32 / 48%);
@@ -29,11 +73,13 @@ html[data-theme='dark'] {
   --foreground: #f1f2f4;
   --surface: #111317;
   --surface-raised: #171a1f;
+  --surface-subtle: #14171b;
   --surface-hover: #1d2026;
   --muted: #22262d;
   --muted-foreground: #969ca6;
   --border: #292d35;
   --border-strong: #3c424d;
+  --control-border: #616875;
   --primary: #f1f2f4;
   --primary-foreground: #111317;
   --accent: #8190ff;
@@ -41,6 +87,7 @@ html[data-theme='dark'] {
   --danger: #ff727c;
   --warning: #f0b455;
   --success: #52c994;
+  --epic: #c084fc;
   --ring: #8190ff;
   --shadow: rgb(0 0 0 / 36%);
   --overlay: rgb(0 0 0 / 72%);

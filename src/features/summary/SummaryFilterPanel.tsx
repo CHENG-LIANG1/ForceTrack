@@ -15,7 +15,11 @@ import {
   TASK_TYPES,
   type Task,
 } from '@/domain/task';
-import type { AssigneeFilterValue } from '@/features/filters/task-selectors';
+import {
+  SUMMARY_FILTER_ARRAY_KEYS,
+  SUMMARY_FILTER_ICON_SIZES,
+  UNASSIGNED_ASSIGNEE_FILTER_VALUE,
+} from '@/features/summary/summary-constants';
 import type { SummaryFilters } from '@/features/summary/summary-selectors';
 
 interface SummaryFilterPanelProps {
@@ -36,14 +40,12 @@ function toggledValue<T extends string>(
 }
 
 function activeDimensionCount(filters: SummaryFilters): number {
-  return [
-    filters.dateFrom || filters.dateTo,
-    filters.assigneeIds?.length,
-    filters.workTypes?.length,
-    filters.statuses?.length,
-    filters.parentIds?.length,
-    filters.priorities?.length,
-  ].filter(Boolean).length;
+  const arrayDimensionCount = SUMMARY_FILTER_ARRAY_KEYS.filter(
+    (key) => filters[key]?.length,
+  ).length;
+  return (
+    arrayDimensionCount + Number(Boolean(filters.dateFrom || filters.dateTo))
+  );
 }
 
 export function SummaryFilterPanel({
@@ -65,7 +67,7 @@ export function SummaryFilterPanel({
     >
       <div className="summary-filter-heading">
         <div>
-          <Filter size={15} aria-hidden="true" />
+          <Filter size={SUMMARY_FILTER_ICON_SIZES.heading} aria-hidden="true" />
           <strong id="summary-filter-title">
             {t('summary.filters.title')}
           </strong>
@@ -73,11 +75,15 @@ export function SummaryFilterPanel({
         </div>
         <Button
           type="button"
+          className="summary-filter-clear"
           variant="outline"
           disabled={activeCount === 0}
           onClick={onClear}
         >
-          <RotateCcw size={14} aria-hidden="true" />
+          <RotateCcw
+            size={SUMMARY_FILTER_ICON_SIZES.action}
+            aria-hidden="true"
+          />
           {t('summary.filters.clear')}
         </Button>
       </div>
@@ -85,38 +91,40 @@ export function SummaryFilterPanel({
       <div className="summary-filter-grid">
         <fieldset className="summary-filter-dates">
           <legend>{t('summary.filters.dateRange')}</legend>
-          <label>
-            <span>{t('summary.filters.from')}</span>
-            <DatePicker
-              id="summary-date-from"
-              name="summary-date-from"
-              value={filters.dateFrom ?? null}
-              locale={locale}
-              placeholder={t('summary.filters.anyDate')}
-              clearLabel={t('summary.filters.clearDate')}
-              onChange={(dateFrom) => onChange({ ...filters, dateFrom })}
-            />
-          </label>
-          <label>
-            <span>{t('summary.filters.to')}</span>
-            <DatePicker
-              id="summary-date-to"
-              name="summary-date-to"
-              value={filters.dateTo ?? null}
-              locale={locale}
-              placeholder={t('summary.filters.anyDate')}
-              clearLabel={t('summary.filters.clearDate')}
-              onChange={(dateTo) => onChange({ ...filters, dateTo })}
-            />
-          </label>
+          <div className="summary-filter-field-body summary-filter-date-options">
+            <label>
+              <span>{t('summary.filters.from')}</span>
+              <DatePicker
+                id="summary-date-from"
+                name="summary-date-from"
+                value={filters.dateFrom ?? null}
+                locale={locale}
+                placeholder={t('summary.filters.anyDate')}
+                clearLabel={t('summary.filters.clearDate')}
+                onChange={(dateFrom) => onChange({ ...filters, dateFrom })}
+              />
+            </label>
+            <label>
+              <span>{t('summary.filters.to')}</span>
+              <DatePicker
+                id="summary-date-to"
+                name="summary-date-to"
+                value={filters.dateTo ?? null}
+                locale={locale}
+                placeholder={t('summary.filters.anyDate')}
+                clearLabel={t('summary.filters.clearDate')}
+                onChange={(dateTo) => onChange({ ...filters, dateTo })}
+              />
+            </label>
+          </div>
         </fieldset>
 
         <fieldset>
           <legend>{t('task.fields.assignee')}</legend>
-          <div className="summary-filter-options">
+          <div className="summary-filter-field-body summary-filter-options">
             {[
               {
-                id: 'unassigned' as AssigneeFilterValue,
+                id: UNASSIGNED_ASSIGNEE_FILTER_VALUE,
                 name: t('summary.unassigned'),
               },
               ...members.map((member) => ({
@@ -142,7 +150,7 @@ export function SummaryFilterPanel({
 
         <fieldset>
           <legend>{t('task.fields.workType')}</legend>
-          <div className="summary-filter-options">
+          <div className="summary-filter-field-body summary-filter-options">
             {TASK_TYPES.map((workType) => (
               <label key={workType}>
                 <Checkbox
@@ -162,7 +170,7 @@ export function SummaryFilterPanel({
 
         <fieldset>
           <legend>{t('task.fields.status')}</legend>
-          <div className="summary-filter-options">
+          <div className="summary-filter-field-body summary-filter-options">
             {TASK_STATUSES.map((status) => (
               <label key={status}>
                 <Checkbox
@@ -182,7 +190,7 @@ export function SummaryFilterPanel({
 
         <fieldset>
           <legend>{t('summary.filters.parent')}</legend>
-          <div className="summary-filter-options summary-filter-epics">
+          <div className="summary-filter-field-body summary-filter-options summary-filter-epics">
             {epics.length ? (
               epics.map((epic) => (
                 <label key={epic.id}>
@@ -210,7 +218,7 @@ export function SummaryFilterPanel({
 
         <fieldset>
           <legend>{t('task.fields.priority')}</legend>
-          <div className="summary-filter-options">
+          <div className="summary-filter-field-body summary-filter-options">
             {TASK_PRIORITIES.map((priority) => (
               <label key={priority}>
                 <Checkbox
