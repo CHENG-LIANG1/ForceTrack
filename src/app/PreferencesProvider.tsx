@@ -49,7 +49,13 @@ export function PreferencesProvider({
   const [preferences, setPreferences] =
     useState<UserPreferences>(initialPreferences);
   const preferencesRef = useRef(preferences);
-  const resolvedTheme: ResolvedTheme = preferences.theme;
+  const getSystemTheme = (): ResolvedTheme =>
+    globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
+  const resolvedTheme: ResolvedTheme =
+    preferences.theme === 'system' ? systemTheme : preferences.theme;
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -80,8 +86,16 @@ export function PreferencesProvider({
     void i18nInstance.changeLanguage(preferences.locale);
     if (!isReady) return;
 
-    applyDocumentPreferences(preferences, preferences.theme);
-  }, [i18nInstance, isReady, preferences]);
+    applyDocumentPreferences(preferences, resolvedTheme);
+  }, [i18nInstance, isReady, preferences, resolvedTheme]);
+
+  useEffect(() => {
+    const media = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!media) return;
+    const update = () => setSystemTheme(media.matches ? 'dark' : 'light');
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   /** Updates UI state immediately, then writes the complete preference record through its repository. */
   const updatePreferences = useCallback(
@@ -101,6 +115,19 @@ export function PreferencesProvider({
       isReady,
       setLocale: (locale) => updatePreferences({ locale }),
       setTheme: (theme) => updatePreferences({ theme }),
+      rememberProject: (projectId, validProjectIds) => {
+        const valid = new Set(validProjectIds);
+        const recentProjectIds = [
+          projectId,
+          ...preferencesRef.current.recentProjectIds,
+        ]
+          .filter(
+            (id, index, values) =>
+              valid.has(id) && values.indexOf(id) === index,
+          )
+          .slice(0, 5);
+        updatePreferences({ lastProjectId: projectId, recentProjectIds });
+      },
     }),
     [isReady, preferences, resolvedTheme, updatePreferences],
   );

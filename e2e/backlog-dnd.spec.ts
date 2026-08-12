@@ -32,6 +32,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('forcetrack:backlog-dnd-initialized')) {
       localStorage.removeItem('forcetrack:tasks:v2');
+      localStorage.removeItem('forcetrack:workspace:v3');
       localStorage.setItem(
         'forcetrack:preferences:v1',
         JSON.stringify({ locale: 'en-US', theme: 'light' }),
@@ -72,17 +73,19 @@ test('drags work between a sprint and backlog without row arrow actions', async 
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const raw = localStorage.getItem('forcetrack:tasks:v2');
+        const raw = localStorage.getItem('forcetrack:workspace:v3');
         if (!raw) return null;
         const tasks = (
           JSON.parse(raw) as {
-            tasks: Array<{
-              key: string;
-              rank: number;
-              status: string;
+            projects: Array<{
+              tasks: Array<{
+                key: string;
+                rank: number;
+                status: string;
+              }>;
             }>;
           }
-        ).tasks;
+        ).projects[0].tasks;
         return tasks
           .filter((task) => task.key === 'FT-2' || task.key === 'FT-6')
           .sort((left, right) => left.rank - right.rank)
@@ -100,13 +103,15 @@ test('drags work between a sprint and backlog without row arrow actions', async 
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const raw = localStorage.getItem('forcetrack:tasks:v2');
+        const raw = localStorage.getItem('forcetrack:workspace:v3');
         if (!raw) return undefined;
         return (
           JSON.parse(raw) as {
-            tasks: Array<{ key: string; sprintId: string | null }>;
+            projects: Array<{
+              tasks: Array<{ key: string; sprintId: string | null }>;
+            }>;
           }
-        ).tasks.find((task) => task.key === 'FT-2')?.sprintId;
+        ).projects[0].tasks.find((task) => task.key === 'FT-2')?.sprintId;
       }),
     )
     .toBe('sprint-1');
@@ -123,13 +128,15 @@ test('drags work between a sprint and backlog without row arrow actions', async 
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const raw = localStorage.getItem('forcetrack:tasks:v2');
+        const raw = localStorage.getItem('forcetrack:workspace:v3');
         if (!raw) return undefined;
         return (
           JSON.parse(raw) as {
-            tasks: Array<{ key: string; sprintId: string | null }>;
+            projects: Array<{
+              tasks: Array<{ key: string; sprintId: string | null }>;
+            }>;
           }
-        ).tasks.find((task) => task.key === 'FT-2')?.sprintId;
+        ).projects[0].tasks.find((task) => task.key === 'FT-2')?.sprintId;
       }),
     )
     .toBeNull();

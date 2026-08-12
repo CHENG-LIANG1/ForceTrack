@@ -9,6 +9,11 @@
   --font-size-label: 12px;
   --font-size-body: 13px;
   --font-size-panel-title: 14px;
+  --font-size-heading-sm: 15px;
+  --font-size-heading-md: 17px;
+  --font-size-heading-lg: 19px;
+  --font-size-title: 24px;
+  --font-size-display: 30px;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -29,6 +34,14 @@
   --radius-lg: 12px;
   --control-height-compact: 36px;
   --control-height-default: 42px;
+  --app-header-height: 56px;
+  --app-content-max: 1440px;
+  --app-page-gutter: clamp(16px, 3vw, 40px);
+  --app-drawer-width: 560px;
+  --app-overlay-gutter: 12px;
+  --app-menu-width: 300px;
+  --app-project-menu-width: 360px;
+  --touch-target-min: 44px;
   --status-todo: var(--muted-foreground);
   --status-in-progress: var(--accent);
   --status-in-review: var(--warning);

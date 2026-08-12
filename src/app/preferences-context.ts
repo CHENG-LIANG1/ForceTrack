@@ -7,7 +7,7 @@ import type {
   UserPreferences,
 } from '@/domain/member';
 
-export type ResolvedTheme = ThemePreference;
+export type ResolvedTheme = Exclude<ThemePreference, 'system'>;
 
 export interface PreferencesContextValue {
   preferences: UserPreferences;
@@ -15,6 +15,10 @@ export interface PreferencesContextValue {
   isReady: boolean;
   setLocale: (locale: SupportedLocale) => void;
   setTheme: (theme: ThemePreference) => void;
+  rememberProject: (
+    projectId: string,
+    validProjectIds: readonly string[],
+  ) => void;
 }
 
 export const PreferencesContext = createContext<PreferencesContextValue | null>(

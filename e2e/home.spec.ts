@@ -6,6 +6,8 @@ test.beforeEach(async ({ page }) => {
     // Clear once per isolated browser context while preserving data across the reload under test.
     if (!sessionStorage.getItem('forcetrack:test-initialized')) {
       localStorage.removeItem('forcetrack:preferences:v1');
+      localStorage.removeItem('forcetrack:preferences:v2');
+      localStorage.removeItem('forcetrack:workspace:v3');
       sessionStorage.setItem('forcetrack:test-initialized', 'true');
     }
   });
@@ -22,19 +24,19 @@ test('navigates both routes, redirects fallbacks, and avoids horizontal overflow
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
   await page.goto('/');
-  await expect(page).toHaveURL(/\/board$/);
+  await expect(page).toHaveURL(/\/projects\/project-forcetrack\/summary$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    /Board|看板/,
+    /Summary|概览/,
   );
 
   await page.getByRole('link', { name: /Timeline|时间线/ }).click();
-  await expect(page).toHaveURL(/\/timeline$/);
+  await expect(page).toHaveURL(/\/projects\/project-forcetrack\/timeline$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
     /Timeline|时间线/,
   );
 
   await page.goto('/does-not-exist');
-  await expect(page).toHaveURL(/\/board$/);
+  await expect(page).toHaveURL(/\/projects\/project-forcetrack\/summary$/);
 
   const pageWidth = await page.evaluate(
     () => document.documentElement.scrollWidth,
@@ -46,26 +48,30 @@ test('navigates both routes, redirects fallbacks, and avoids horizontal overflow
   expect(pageErrors).toEqual([]);
 });
 
-test('defaults to Vercel Dark and persists settings across reloads', async ({
+test('defaults to the system theme and persists explicit settings across reloads', async ({
   page,
 }) => {
   await page.goto('/board');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.getByRole('button', { name: /Settings|设置/ }).click();
-  await expect(page.locator('.theme-preview')).toHaveCount(2);
-  await expect(
-    page.getByRole('button', { name: 'Vercel Dark' }),
-  ).toHaveAttribute('aria-pressed', 'true');
+  const systemTheme = await page.evaluate(() =>
+    matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  );
+  await expect(page.locator('html')).toHaveAttribute('data-theme', systemTheme);
+  await page.getByRole('button', { name: 'Open user menu' }).click();
+  await expect(page.getByRole('button', { name: 'System' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.getByRole('button', { name: 'English' }).click();
-  await page.getByRole('button', { name: 'Vercel Light' }).click();
+  await page.getByRole('button', { name: 'Light' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await expect(
-    page.getByRole('button', { name: 'Vercel Light' }),
-  ).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', { name: /System/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open user menu' }).click();
+  await expect(page.getByRole('button', { name: 'Light' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'System' })).toBeVisible();
 });

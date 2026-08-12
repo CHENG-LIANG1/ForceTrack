@@ -30,6 +30,8 @@ const preferencesRepository: PreferencesRepository = {
   load: async (): Promise<UserPreferences> => ({
     locale: 'en-US',
     theme: 'light',
+    lastProjectId: null,
+    recentProjectIds: [],
   }),
   save: async () => undefined,
 };
@@ -95,6 +97,14 @@ describe('Timeline page', () => {
     expect(
       screen.getByRole('button', { name: /FT-2.*Undated discovery/ }),
     ).toBeVisible();
+
+    const scheduledBar = screen.getByRole('button', {
+      name: 'FT-1: Overdue delivery',
+    });
+    await user.hover(scheduledBar);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Overdue delivery',
+    );
 
     await user.click(screen.getByRole('button', { name: 'Today' }));
     expect(scrollIntoView).toHaveBeenCalledWith({

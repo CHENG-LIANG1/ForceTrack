@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 
+// Existing feature tests run as returning users; onboarding tests opt into a clean first visit.
+window.localStorage.setItem('forcetrack:onboarding:v1', 'complete');
+
 class ResizeObserverMock implements ResizeObserver {
   observe() {}
   unobserve() {}

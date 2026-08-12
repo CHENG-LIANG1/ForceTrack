@@ -1,5 +1,5 @@
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US'] as const;
-export const THEME_PREFERENCES = ['light', 'dark'] as const;
+export const THEME_PREFERENCES = ['system', 'light', 'dark'] as const;
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];
@@ -73,4 +73,6 @@ export function createMember(
 export interface UserPreferences {
   locale: SupportedLocale;
   theme: ThemePreference;
+  lastProjectId: string | null;
+  recentProjectIds: string[];
 }

@@ -1,13 +1,16 @@
 {
   "nav": {
     "primary": "主导航",
-    "summary": "Summary",
+    "summary": "概览",
     "backlog": "Backlog",
     "board": "看板",
     "timeline": "时间线"
   },
   "preferences": {
     "settings": "设置",
+    "userMenu": "打开用户菜单",
+    "localUser": "本地用户",
+    "localMode": "仅保存在此浏览器",
     "description": "调整界面语言与视觉主题。",
     "language": "语言",
     "languageDescription": "选择界面显示语言。",
@@ -18,8 +21,138 @@
       "en-US": "English"
     },
     "themeOption": {
-      "light": "Vercel Light",
-      "dark": "Vercel Dark"
+      "system": "跟随系统",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "help": {
+    "title": "帮助与快捷键",
+    "description": "项目切换只改变当前项目，页面导航保留在同一工作区。",
+    "newTask": "新建任务",
+    "search": "搜索"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "欢迎使用 ForceTrack",
+      "description": "花一分钟熟悉工作区，随后你就可以清晰地规划、推进和回顾工作。"
+    },
+    "project": {
+      "title": "按项目隔离工作",
+      "description": "在这里切换或管理项目。任务、Sprint 和成员始终归属于当前选中的项目。",
+      "emptyDescription": "创建项目后，可以通过这里切换不同项目，或打开项目管理。"
+    },
+    "emptyWorkspace": {
+      "title": "创建第一个项目",
+      "description": "从这里创建专属工作区，在其中管理任务、Sprint 和成员。"
+    },
+    "navigation": {
+      "title": "沿交付流程前进",
+      "description": "通过概览、Backlog、看板和时间线，完成从规划到日常推进与回顾的全过程。"
+    },
+    "workspace": {
+      "title": "专注当前视图",
+      "description": "每个页面都会先说明用途并提供主要操作，下方内容始终对应当前项目。"
+    },
+    "tabs": {
+      "summary": {
+        "title": "概览：判断项目健康度",
+        "description": "从这里快速了解进度、近期活动、优先级、工作类型和团队负载。"
+      },
+      "summaryWorkspace": {
+        "title": "聚焦你关心的指标",
+        "description": "使用标题下方的筛选器，按日期、负责人、工作类型、状态、Epic 或优先级收窄全部指标与图表。"
+      },
+      "backlog": {
+        "title": "Backlog：整理后续工作",
+        "description": "在工作进入活动 Sprint 前，在这里创建、搜索、筛选并调整优先顺序。"
+      },
+      "backlogWorkspace": {
+        "title": "有序规划 Sprint",
+        "description": "创建待规划 Sprint，在不同区域间拖动工作，设置 Sprint 目标并启动下一轮交付。"
+      },
+      "board": {
+        "title": "看板：推进活动 Sprint",
+        "description": "看板会持续展示当前 Sprint，并按交付状态组织其中的工作。"
+      },
+      "boardWorkspace": {
+        "title": "让状态始终准确",
+        "description": "在待办、进行中、审核中和已完成之间拖动卡片，让团队共享同一份交付进度。"
+      },
+      "timeline": {
+        "title": "时间线：检查整体排期",
+        "description": "在统一日历中查看已排期工作，及早发现时间冲突与交付压力。"
+      },
+      "timelineWorkspace": {
+        "title": "直观协调日期",
+        "description": "调整可见范围，检查逾期或超出范围的工作，并为尚未排期的任务补充日期。"
+      }
+    },
+    "help": {
+      "title": "随时回来查看",
+      "description": "打开“帮助与快捷键”，可以查看快捷键，也可以随时重新播放本引导。"
+    },
+    "progress": "第 {{current}} / {{total}} 步",
+    "back": "上一步",
+    "next": "下一步",
+    "finish": "开始使用 ForceTrack",
+    "skip": "跳过引导",
+    "replay": "重新查看引导"
+  },
+  "project": {
+    "none": "尚无项目",
+    "empty": {
+      "title": "新建第一个项目",
+      "description": "创建项目，在一个空间内管理任务、Sprint 和成员。",
+      "action": "新建项目"
+    },
+    "switcher": {
+      "label": "切换项目，当前为 {{project}}",
+      "projects": "项目",
+      "search": "搜索项目…",
+      "noResults": "没有匹配的项目"
+    },
+    "create": {
+      "title": "新建项目",
+      "description": "创建一个独立的任务、Sprint 和成员空间。",
+      "action": "新建项目",
+      "creating": "正在创建…"
+    },
+    "manage": {
+      "title": "项目管理",
+      "description": "创建、查看、编辑或删除本地项目。",
+      "action": "项目管理",
+      "close": "关闭项目管理",
+      "count": "共 {{count}} 个项目",
+      "create": "新建项目",
+      "current": "当前项目",
+      "open": "打开",
+      "edit": "编辑",
+      "editNamed": "编辑项目 {{name}}",
+      "editTitle": "编辑项目",
+      "editDescription": "修改项目名称和描述。",
+      "save": "保存项目",
+      "saving": "正在保存…",
+      "delete": "删除",
+      "deleteNamed": "删除项目 {{name}}",
+      "deleteTitle": "删除项目？",
+      "deleteDescription": "将永久删除“{{name}}”及其 {{tasks}} 个任务、{{sprints}} 个 Sprint 和 {{members}} 位成员。此操作无法撤销。",
+      "deleteConfirmationLabel": "输入“{{name}}”以确认删除",
+      "confirmDelete": "永久删除",
+      "project_not_found": "该项目已不存在。",
+      "deleteFailed": "无法删除项目，请重试。",
+      "noDescription": "暂无项目描述",
+      "stats": "{{tasks}} 个任务 · {{sprints}} 个 Sprint · {{members}} 位成员"
+    },
+    "fields": {
+      "name": "项目名称",
+      "description": "描述（可选）"
+    },
+    "validation": {
+      "name_required": "请输入项目名称。",
+      "name_too_long": "项目名称不能超过 80 个字符。",
+      "description_too_long": "描述不能超过 500 个字符。",
+      "unknown": "无法创建项目，请重试。"
     }
   },
   "board": {
@@ -55,6 +188,8 @@
       "save": "保存任务",
       "saving": "正在保存…",
       "clearDate": "清除日期",
+      "decreaseStoryPoints": "减少 Story points",
+      "increaseStoryPoints": "增加 Story points",
       "cancel": "取消",
       "close": "关闭任务编辑器",
       "delete": "删除任务",
@@ -153,7 +288,7 @@
     "invalidStoryPoints": "Story points 必须是 0 到 100 的整数。"
   },
   "summary": {
-    "title": "Summary",
+    "title": "概览",
     "description": "从状态、优先级和团队负载了解项目健康度。",
     "created": "近 7 天创建",
     "updated": "近 7 天更新",
@@ -173,7 +308,7 @@
     "childCount": "{{count}} 个子工作项",
     "statusCount": "{{status}} {{count}}",
     "filters": {
-      "title": "筛选 Summary",
+      "title": "筛选概览",
       "active": "{{count}} 个筛选维度生效",
       "clear": "清除筛选",
       "dateRange": "日期范围",
@@ -250,6 +385,7 @@
     "actions": {
       "create": "新建 Sprint",
       "save": "保存 Sprint",
+      "delete": "删除 Sprint",
       "editLabel": "编辑 {{name}}",
       "deleteLabel": "删除 {{name}}",
       "start": "开始 Sprint",
@@ -271,6 +407,21 @@
     }
   },
   "member": {
+    "manage": "成员管理",
+    "title": "项目成员",
+    "description": "管理当前项目中可被分配工作的人。成员只保存在本地，未发送邀请邮件。",
+    "emptyTitle": "还没有项目成员",
+    "emptyDescription": "添加成员后即可将任务分配给他们。",
+    "removeLastOwner": "项目必须保留至少一位 Owner。",
+    "removeReferenced": "先改派该成员负责或报告的任务。",
+    "removeTitle": "移除项目成员？",
+    "removeDescription": "移除后，无法再将当前项目的新任务分配给 {{name}}。",
+    "last_owner": "无法移除项目最后一位 Owner。",
+    "member_has_tasks": "请先改派该成员关联的任务。",
+    "removeFailed": "无法移除该成员。",
+    "columns": { "person": "成员", "role": "角色", "status": "状态" },
+    "role": { "owner": "Owner", "member": "成员" },
+    "status": { "joined": "已加入", "pending": "待接受" },
     "createTitle": "添加成员",
     "createDescription": "添加后，该成员可立即成为负责人或报告人。",
     "formTitle": "新成员",
@@ -286,7 +437,10 @@
     },
     "actions": {
       "add": "添加成员",
-      "close": "关闭成员窗口"
+      "close": "关闭成员窗口",
+      "remove": "移除成员",
+      "removeNamed": "移除 {{name}}",
+      "confirmRemove": "确认移除"
     },
     "validation": {
       "name_required": "请输入姓名。",
@@ -313,6 +467,7 @@
     "noScheduled": "暂无已设置日期的工作项，请查看下方未排期列表。"
   },
   "a11y": {
+    "skipToContent": "跳到主要内容",
     "forceTrackHome": "ForceTrack 看板",
     "preferenceControls": "语言和主题偏好"
   },

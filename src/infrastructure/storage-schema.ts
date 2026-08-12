@@ -233,6 +233,16 @@ export const userPreferencesSchema: z.ZodType<UserPreferences> = z
   .object({
     locale: z.enum(SUPPORTED_LOCALES),
     theme: z.enum(THEME_PREFERENCES),
+    lastProjectId: z.string().min(1).nullable(),
+    recentProjectIds: z.array(z.string().min(1)).max(5),
+  })
+  .strict();
+
+/** The previous preference shape remains a read-only migration input. */
+export const userPreferencesV1Schema = z
+  .object({
+    locale: z.enum(SUPPORTED_LOCALES),
+    theme: z.enum(['light', 'dark']),
   })
   .strict();
 

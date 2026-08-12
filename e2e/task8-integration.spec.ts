@@ -7,6 +7,8 @@ test.beforeEach(async ({ page }) => {
       localStorage.removeItem('forcetrack:tasks:v2');
       localStorage.removeItem('forcetrack:tasks:v1');
       localStorage.removeItem('forcetrack:recovery:last-invalid');
+      localStorage.removeItem('forcetrack:workspace:v3');
+      localStorage.removeItem('forcetrack:recovery:workspace:last-invalid');
       localStorage.setItem(
         'forcetrack:preferences:v1',
         JSON.stringify({ locale: 'en-US', theme: 'light' }),
@@ -20,6 +22,8 @@ test('persists a local member and synchronizes assignment across all four tabs',
   page,
 }) => {
   await page.goto('/backlog');
+  await page.getByRole('button', { name: /Switch project/ }).click();
+  await page.getByRole('button', { name: 'Manage members' }).click();
   await page.getByRole('button', { name: 'Add member' }).click();
   let memberDialog = page.getByRole('dialog', { name: 'Add member' });
   await expect(
@@ -81,20 +85,23 @@ test('persists a local member and synchronizes assignment across all four tabs',
   ).toBeVisible();
 
   const storedAssignment = await page.evaluate(() => {
-    const snapshot = JSON.parse(
-      localStorage.getItem('forcetrack:tasks:v2') ?? '{}',
+    const workspace = JSON.parse(
+      localStorage.getItem('forcetrack:workspace:v3') ?? '{}',
     ) as {
-      members?: Array<{ id: string; email: string }>;
-      tasks?: Array<{
-        title: string;
-        assigneeId: string | null;
-        reporterId: string | null;
+      projects?: Array<{
+        members: Array<{ id: string; email: string }>;
+        tasks: Array<{
+          title: string;
+          assigneeId: string | null;
+          reporterId: string | null;
+        }>;
       }>;
     };
-    const member = snapshot.members?.find(
+    const project = workspace.projects?.[0];
+    const member = project?.members.find(
       (candidate) => candidate.email === 'grace@example.com',
     );
-    const task = snapshot.tasks?.find(
+    const task = project?.tasks.find(
       (candidate) => candidate.title === 'Local member integration',
     );
     return {
@@ -111,7 +118,7 @@ test('recovers malformed storage without blocking routes and dismisses the warni
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('forcetrack:tasks:v2', '{invalid-json');
+    localStorage.setItem('forcetrack:workspace:v3', '{invalid-json');
   });
   await page.goto('/summary');
 
@@ -121,7 +128,7 @@ test('recovers malformed storage without blocking routes and dismisses the warni
   ).toBeVisible();
   expect(
     await page.evaluate(() =>
-      localStorage.getItem('forcetrack:recovery:last-invalid'),
+      localStorage.getItem('forcetrack:recovery:workspace:last-invalid'),
     ),
   ).toBe('{invalid-json');
 
@@ -142,8 +149,12 @@ test('keeps navigation and primary planning actions accessible at 768 px', async
   for (const name of ['Summary', 'Backlog', 'Board', 'Timeline']) {
     await expect(page.getByRole('link', { name, exact: true })).toBeVisible();
   }
-  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Add member' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Open user menu' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /Switch project/ }),
+  ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Create sprint' }),
   ).toBeVisible();

@@ -596,7 +596,7 @@ Jira 将“添加 people”和角色/权限绑定；ForceTrack 只采用成员�
 
 ### 5.12 主题
 
-- preference 支持 `light | dark`，分别展示为 Vercel Light 与 Vercel Dark，默认使用 `dark`。
+- preference 支持 `light | dark`，分别展示为 Light 与 Dark，默认使用 `dark`。
 - Header 设置面板通过可扩展卡片网格提供主题效果预览与切换。
 - 在 `index.html` 中于 React 挂载前读取 preference 并设置 `data-theme`，减少主题闪烁。
 - CSS 至少定义：页面背景、表面、悬浮表面、正文、次要文字、边框、强调、危险、警告、成功和焦点环。
@@ -813,7 +813,7 @@ T0–T4 状态为已完成（用户确认，执行后续任务时仍需用回归
 
 - 实现 AppProviders、Header、Board/Timeline 空页面和路由回退。
 - 建立中英文资源、默认语言策略和语言切换。
-- 建立语义颜色令牌、Vercel Light/Dark 主题卡片和预挂载主题脚本。
+- 建立语义颜色令牌、Light/Dark 主题卡片和预挂载主题脚本。
 - 实现偏好 Repository 和基础组件测试。
 
 **独立输出**：可在两个 URL 间导航，并可靠切换语言/主题。
@@ -822,7 +822,7 @@ T0–T4 状态为已完成（用户确认，执行后续任务时仍需用回归
 
 - [ ] `/`、`/board`、`/timeline` 和未知路径行为正确。
 - [ ] 中英文切换即时生效，两份资源 key 一致。
-- [ ] Vercel Light/Dark 均可通过预览卡片切换，刷新后保持。
+- [ ] Light/Dark 均可通过预览卡片切换，刷新后保持。
 - [ ] `html[lang]` 与 `html[data-theme]` 正确。
 - [ ] 1280×720 下 Header 无溢出。
 

@@ -8,6 +8,18 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',
+    // Feature tests model returning users; onboarding behavior has its own focused browser coverage.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://127.0.0.1:4173',
+          localStorage: [
+            { name: 'forcetrack:onboarding:v1', value: 'complete' },
+          ],
+        },
+      ],
+    },
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

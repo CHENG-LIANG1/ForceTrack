@@ -29,7 +29,12 @@ class MemoryPreferencesRepository implements PreferencesRepository {
 
 function renderApp(
   path: string,
-  preferences: UserPreferences = { locale: 'en-US', theme: 'light' },
+  preferences: UserPreferences = {
+    locale: 'en-US',
+    theme: 'light',
+    lastProjectId: null,
+    recentProjectIds: [],
+  },
   taskRepository?: TaskRepository,
 ) {
   window.history.replaceState({}, '', path);
@@ -68,13 +73,13 @@ describe('App shell', () => {
   });
 
   it.each([
-    ['/', '/board'],
-    ['/unknown', '/board'],
-  ])('redirects %s to the Board route', async (path, expectedPath) => {
+    ['/', '/projects/project-forcetrack/summary'],
+    ['/unknown', '/projects/project-forcetrack/summary'],
+  ])('redirects %s to the preferred project', async (path, expectedPath) => {
     renderApp(path);
 
     expect(
-      await screen.findByRole('heading', { name: 'Board', level: 1 }),
+      await screen.findByRole('heading', { name: 'Summary', level: 1 }),
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe(expectedPath);
   });
@@ -92,7 +97,9 @@ describe('App shell', () => {
       screen.getByRole('heading', { name: 'Timeline', level: 1 }),
     ).toBeInTheDocument();
     expect(timelineLink).toHaveClass('nav-item-active');
-    expect(window.location.pathname).toBe('/timeline');
+    expect(window.location.pathname).toBe(
+      '/projects/project-forcetrack/timeline',
+    );
   });
 
   it('switches locale and theme immediately and persists complete preferences', async () => {
@@ -100,14 +107,16 @@ describe('App shell', () => {
     const repository = renderApp('/board', {
       locale: 'en-US',
       theme: 'dark',
+      lastProjectId: null,
+      recentProjectIds: [],
     });
     const settingsButton = await screen.findByRole('button', {
-      name: 'Settings',
+      name: 'Open user menu',
     });
     await user.click(settingsButton);
     const chineseButton = screen.getByRole('button', { name: '中文' });
     const lightThemeButton = screen.getByRole('button', {
-      name: 'Vercel Light',
+      name: 'Light',
     });
     await waitFor(() => expect(chineseButton).toBeEnabled());
     expect(document.documentElement).toHaveAttribute('lang', 'en-US');
@@ -125,36 +134,46 @@ describe('App shell', () => {
       expect(repository.saves.at(-1)).toEqual({
         locale: 'zh-CN',
         theme: 'light',
+        lastProjectId: 'project-forcetrack',
+        recentProjectIds: ['project-forcetrack'],
       }),
     );
   });
 
-  it('shows two previewable Vercel themes and closes settings with Escape', async () => {
+  it('shows system, light, and dark themes and closes the user menu with Escape', async () => {
     const user = userEvent.setup();
-    renderApp('/board', { locale: 'en-US', theme: 'dark' });
+    renderApp('/board', {
+      locale: 'en-US',
+      theme: 'dark',
+      lastProjectId: null,
+      recentProjectIds: [],
+    });
 
-    await user.click(await screen.findByRole('button', { name: 'Settings' }));
-    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Vercel Dark' })).toHaveAttribute(
+    await user.click(
+      await screen.findByRole('button', { name: 'Open user menu' }),
+    );
+    expect(screen.getByText('Local user')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: 'Vercel Light' })).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: /System/ }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Light' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'System' })).toBeVisible();
 
     await user.keyboard('{Escape}');
-    expect(
-      screen.queryByRole('dialog', { name: 'Settings' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Local user')).not.toBeInTheDocument();
   });
 
   it('shows recovered storage feedback on every route and lets the user dismiss it', async () => {
     const user = userEvent.setup();
     renderApp(
       '/summary',
-      { locale: 'en-US', theme: 'light' },
+      {
+        locale: 'en-US',
+        theme: 'light',
+        lastProjectId: null,
+        recentProjectIds: [],
+      },
       new RecoveryTaskRepository({
         kind: 'recovered',
         snapshot: makeSnapshot(),
@@ -177,14 +196,19 @@ describe('App shell', () => {
   it('keeps an in-memory project usable when repository loading fails', async () => {
     renderApp(
       '/board',
-      { locale: 'en-US', theme: 'light' },
+      {
+        locale: 'en-US',
+        theme: 'light',
+        lastProjectId: null,
+        recentProjectIds: [],
+      },
       new RecoveryTaskRepository(new Error('read failed')),
     );
 
     expect(
       await screen.findByText(/could not be saved to this browser/),
     ).toBeVisible();
-    expect(screen.getByText('ForceTrack Sprint 1')).toBeVisible();
+    expect(await screen.findByText('ForceTrack Sprint 1')).toBeVisible();
     expect(screen.queryByText('Loading board…')).not.toBeInTheDocument();
   });
 
@@ -192,7 +216,12 @@ describe('App shell', () => {
     const user = userEvent.setup();
     renderApp(
       '/board',
-      { locale: 'en-US', theme: 'light' },
+      {
+        locale: 'en-US',
+        theme: 'light',
+        lastProjectId: null,
+        recentProjectIds: [],
+      },
       new RecoveryTaskRepository(
         { kind: 'loaded', snapshot: makeSnapshot() },
         true,

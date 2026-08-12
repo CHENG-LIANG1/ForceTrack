@@ -22,8 +22,8 @@ The current repository includes:
 - `/summary`, `/backlog`, `/board`, and `/timeline` routes with fallback
   redirects
 - Persisted Chinese/English locale switching
-- Persisted Vercel Light/Dark theme cards built on semantic color tokens,
-  defaulting to Vercel Dark
+- Persisted Light/Dark theme cards built on semantic color tokens, defaulting
+  to Dark
 - A responsive application shell with route-aware navigation
 - A shared task state provider with serialized local persistence
 - Versioned V1 → V2 migration with corrupt-storage recovery

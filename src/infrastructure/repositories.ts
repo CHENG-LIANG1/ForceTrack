@@ -1,5 +1,6 @@
 import type { UserPreferences } from '@/domain/member';
 import type { TaskSnapshotV2 } from '@/domain/task';
+import type { WorkspaceSnapshotV3 } from '@/domain/project';
 
 export type LoadResult =
   | { kind: 'loaded'; snapshot: TaskSnapshotV2 }
@@ -10,6 +11,16 @@ export type LoadResult =
 export interface TaskRepository {
   load(): Promise<LoadResult>;
   save(snapshot: TaskSnapshotV2): Promise<void>;
+}
+
+export type WorkspaceLoadResult = {
+  kind: 'loaded' | 'migrated' | 'seeded' | 'recovered';
+  snapshot: WorkspaceSnapshotV3;
+};
+
+export interface WorkspaceRepository {
+  load(): Promise<WorkspaceLoadResult>;
+  save(snapshot: WorkspaceSnapshotV3): Promise<void>;
 }
 
 export interface PreferencesRepository {

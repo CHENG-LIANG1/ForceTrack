@@ -17,12 +17,14 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Pencil, Plus, Search, Trash2, UserPlus } from 'lucide-react';
+import { Pencil, Plus, Search } from 'lucide-react';
 import { type CSSProperties, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { useProjects } from '@/app/project-context';
+import { projectRoutes } from '@/app/route-paths';
 import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -58,7 +60,6 @@ import {
 import { selectFilteredTasks } from '@/features/filters/task-selectors';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
 import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
-import { MemberDialog } from '@/features/backlog/MemberDialog';
 import { CompleteSprintDialog } from '@/features/backlog/CompleteSprintDialog';
 import { DeleteSprintDialog } from '@/features/backlog/DeleteSprintDialog';
 import { SprintDialog } from '@/features/backlog/SprintDialog';
@@ -82,7 +83,6 @@ interface BacklogSectionProps {
   onStartSprint(sprint: Sprint): void;
   onCompleteSprint(sprint: Sprint): void;
   onEditSprint(sprint: Sprint): void;
-  onDeleteSprint(sprint: Sprint): void;
 }
 
 interface BacklogItemProps {
@@ -190,7 +190,6 @@ function BacklogSection({
   onStartSprint,
   onCompleteSprint,
   onEditSprint,
-  onDeleteSprint,
 }: BacklogSectionProps) {
   const { t } = useTranslation();
   const sprintId = sprint?.id ?? null;
@@ -269,19 +268,6 @@ function BacklogSection({
               onClick={() => onEditSprint(sprint)}
             >
               <Pencil size={14} />
-            </Button>
-          ) : null}
-          {sprint?.status === 'planned' ? (
-            <Button
-              className="sprint-icon-button"
-              variant="unstyled"
-              type="button"
-              aria-label={t('sprint.actions.deleteLabel', {
-                name: sprint.name,
-              })}
-              onClick={() => onDeleteSprint(sprint)}
-            >
-              <Trash2 size={14} />
             </Button>
           ) : null}
           {sprint?.status === 'planned' ? (
@@ -365,7 +351,6 @@ export function BacklogPage() {
     startSprint,
     completeSprint,
     deleteSprint,
-    createMember,
     rankBacklogTask,
   } = useTasks();
   const [query, setQuery] = useState('');
@@ -382,7 +367,7 @@ export function BacklogPage() {
   const [sprintDialogOpen, setSprintDialogOpen] = useState(false);
   const [editingSprintId, setEditingSprintId] = useState<string | null>(null);
   const [deletingSprintId, setDeletingSprintId] = useState<string | null>(null);
-  const [memberDialogOpen, setMemberDialogOpen] = useState(false);
+  const { currentProject } = useProjects();
   const [startingSprintId, setStartingSprintId] = useState<string | null>(null);
   const [completingSprintId, setCompletingSprintId] = useState<string | null>(
     null,
@@ -559,21 +544,13 @@ export function BacklogPage() {
   return (
     <section className="workspace-page" aria-labelledby="backlog-title">
       <PageHeader
-        section="Backlog"
+        onboardingTarget="page-backlog"
+        section={t('nav.backlog')}
         titleId="backlog-title"
         title={t('backlog.title')}
         description={t('backlog.description')}
         actions={
           <>
-            <Button
-              variant="outline"
-              size="lg"
-              disabled={!isReady}
-              onClick={() => setMemberDialogOpen(true)}
-            >
-              <UserPlus size={16} />
-              {t('member.actions.add')}
-            </Button>
             <Button
               variant="outline"
               size="lg"
@@ -738,7 +715,6 @@ export function BacklogPage() {
                 onStartSprint={(target) => setStartingSprintId(target.id)}
                 onCompleteSprint={(target) => setCompletingSprintId(target.id)}
                 onEditSprint={(target) => setEditingSprintId(target.id)}
-                onDeleteSprint={(target) => setDeletingSprintId(target.id)}
               />
             ))}
             <BacklogSection
@@ -759,7 +735,6 @@ export function BacklogPage() {
               onStartSprint={() => undefined}
               onCompleteSprint={() => undefined}
               onEditSprint={() => undefined}
-              onDeleteSprint={() => undefined}
             />
           </div>
 
@@ -824,6 +799,11 @@ export function BacklogPage() {
             ? updateSprint(editingSprint.id, fields)
             : Promise.resolve()
         }
+        onDelete={
+          editingSprint?.status === 'planned'
+            ? (sprint) => setDeletingSprintId(sprint.id)
+            : undefined
+        }
       />
       <StartSprintDialog
         key={startingSprint?.id ?? 'start-sprint-closed'}
@@ -834,7 +814,7 @@ export function BacklogPage() {
         }}
         onSave={async (sprintId, fields) => {
           await startSprint(sprintId, fields);
-          navigate('/board');
+          if (currentProject) navigate(projectRoutes.board(currentProject.id));
         }}
       />
       <CompleteSprintDialog
@@ -857,12 +837,6 @@ export function BacklogPage() {
           if (!open) setDeletingSprintId(null);
         }}
         onConfirm={deleteSprint}
-      />
-      <MemberDialog
-        open={memberDialogOpen}
-        members={snapshot?.members ?? []}
-        onOpenChange={setMemberDialogOpen}
-        onSave={createMember}
       />
     </section>
   );

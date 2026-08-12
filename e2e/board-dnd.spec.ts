@@ -31,6 +31,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('forcetrack:dnd-test-initialized')) {
       localStorage.removeItem('forcetrack:tasks:v2');
+      localStorage.removeItem('forcetrack:workspace:v3');
       localStorage.setItem(
         'forcetrack:preferences:v1',
         JSON.stringify({ locale: 'en-US', theme: 'light' }),
@@ -61,13 +62,15 @@ test('moves a task across columns and preserves its status after reload', async 
   await expect(doneColumn.getByLabel('Done, 2 tasks')).toBeVisible();
 
   const storedBeforeReload = await page.evaluate(() => {
-    const raw = localStorage.getItem('forcetrack:tasks:v2');
+    const raw = localStorage.getItem('forcetrack:workspace:v3');
     if (!raw) return null;
     return (
       JSON.parse(raw) as {
-        tasks: Array<{ key: string; status: string; position: number }>;
+        projects: Array<{
+          tasks: Array<{ key: string; status: string; position: number }>;
+        }>;
       }
-    ).tasks.find((task) => task.key === 'FT-1');
+    ).projects[0].tasks.find((task) => task.key === 'FT-1');
   });
   expect(storedBeforeReload).toMatchObject({ status: 'done' });
 
@@ -79,13 +82,15 @@ test('moves a task across columns and preserves its status after reload', async 
   ).toBeVisible();
 
   const storedTask = await page.evaluate(() => {
-    const raw = localStorage.getItem('forcetrack:tasks:v2');
+    const raw = localStorage.getItem('forcetrack:workspace:v3');
     if (!raw) return null;
     return (
       JSON.parse(raw) as {
-        tasks: Array<{ key: string; status: string; position: number }>;
+        projects: Array<{
+          tasks: Array<{ key: string; status: string; position: number }>;
+        }>;
       }
-    ).tasks.find((task) => task.key === 'FT-1');
+    ).projects[0].tasks.find((task) => task.key === 'FT-1');
   });
   expect(storedTask).toEqual(storedBeforeReload);
 });

@@ -12,12 +12,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import type { Member } from '@/domain/member';
 import type { Sprint } from '@/domain/sprint';
 import type { Task, TaskFields, TaskStatus } from '@/domain/task';
@@ -89,8 +89,8 @@ export function TaskDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
           onCloseAutoFocus={(event) => {
             if (!returnFocusRef?.current) return;
             event.preventDefault();
@@ -99,18 +99,18 @@ export function TaskDialog({
         >
           <div className="task-dialog-heading">
             <div>
-              <DialogTitle>
+              <SheetTitle>
                 {task
                   ? t('task.dialog.editTitle')
                   : t('task.dialog.createTitle')}
-              </DialogTitle>
-              <DialogDescription>
+              </SheetTitle>
+              <SheetDescription>
                 {task
                   ? t('task.dialog.editDescription')
                   : t('task.dialog.createDescription')}
-              </DialogDescription>
+              </SheetDescription>
             </div>
-            <DialogClose asChild>
+            <SheetClose asChild>
               <Button
                 className="icon-button"
                 variant="unstyled"
@@ -119,7 +119,7 @@ export function TaskDialog({
               >
                 <X size={18} />
               </Button>
-            </DialogClose>
+            </SheetClose>
           </div>
 
           <TaskForm
@@ -137,8 +137,8 @@ export function TaskDialog({
               dirtyRef.current = dirty;
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
         <AlertDialogContent>

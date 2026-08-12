@@ -4,12 +4,15 @@
  */
 import type { ReactNode } from 'react';
 
+import { useProjects } from '@/app/project-context';
+
 interface PageHeaderProps {
   section: string;
   titleId: string;
   title: ReactNode;
   description: ReactNode;
   actions?: ReactNode;
+  onboardingTarget?: string;
 }
 
 export function PageHeader({
@@ -18,11 +21,15 @@ export function PageHeader({
   title,
   description,
   actions,
+  onboardingTarget,
 }: PageHeaderProps) {
+  const { currentProject } = useProjects();
   return (
-    <header className="page-header">
+    <header className="page-header" data-onboarding={onboardingTarget}>
       <div className="page-heading compact-page-heading">
-        <p className="page-kicker">ForceTrack / {section}</p>
+        <p className="page-kicker">
+          {currentProject?.name ?? 'ForceTrack'} / {section}
+        </p>
         <h1 id={titleId}>{title}</h1>
         <p>{description}</p>
       </div>

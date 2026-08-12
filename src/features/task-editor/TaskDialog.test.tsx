@@ -43,6 +43,8 @@ const preferencesRepository: PreferencesRepository = {
   load: async (): Promise<UserPreferences> => ({
     locale: 'en-US',
     theme: 'light',
+    lastProjectId: null,
+    recentProjectIds: [],
   }),
   save: async () => undefined,
 };
@@ -105,6 +107,18 @@ describe('TaskDialog CRUD flow', () => {
     expect(titleInput).toHaveAttribute('aria-invalid', 'true');
     expect(titleInput).toHaveFocus();
 
+    const storyPoints = within(dialog).getByRole('spinbutton', {
+      name: 'Story points',
+    });
+    expect(storyPoints).toHaveAttribute('type', 'text');
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Increase story points' }),
+    );
+    expect(storyPoints).toHaveValue('1');
+    await user.click(storyPoints);
+    await user.keyboard('{ArrowUp}');
+    expect(storyPoints).toHaveValue('2');
+
     await user.type(titleInput, 'Ship keyboard task flow');
     chooseOption(dialog, 'Status', 'in_progress');
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
@@ -117,6 +131,7 @@ describe('TaskDialog CRUD flow', () => {
         key: 'FT-1',
         title: 'Ship keyboard task flow',
         status: 'in_progress',
+        storyPoints: 2,
       }),
     ]);
     expect(

@@ -41,6 +41,17 @@ describe('task domain', () => {
     });
   });
 
+  it('uses the owning project key for a new task', () => {
+    const task = createTask(
+      makeSnapshot({ nextTaskNumber: 1 }),
+      makeTaskFields(),
+      makeDependencies(['game-task']),
+      'GAME',
+    );
+
+    expect(task.key).toBe('GAME-1');
+  });
+
   it('updates editable fields and time without changing identity metadata', () => {
     const current = makeTask();
     const updated = updateTask(
