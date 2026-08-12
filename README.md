@@ -19,14 +19,16 @@ The current repository includes:
 - ESLint, Prettier, and strict TypeScript checks
 - Vitest with Testing Library
 - Playwright release coverage for Chromium at 1280 × 720
-- `/summary`, `/backlog`, `/board`, and `/timeline` routes with fallback
-  redirects
+- Project-scoped Summary, Backlog, Board, and Timeline routes with legacy-path
+  redirects; member management opens from the Project Switcher
+- Multi-project creation, switching, editing, deletion, and recent-project
+  recovery
 - Persisted Chinese/English locale switching
 - Persisted Light/Dark theme cards built on semantic color tokens, defaulting
   to Dark
 - A responsive application shell with route-aware navigation
 - A shared task state provider with serialized local persistence
-- Versioned V1 → V2 migration with corrupt-storage recovery
+- Versioned V1/V2 → Workspace V3 migration with corrupt-storage recovery
 - A Radix task editor with create, edit, status updates, deletion, validation,
   and unsaved-change confirmation
 - Four persisted Board columns with counts, sortable task cards, empty states,
@@ -74,14 +76,17 @@ permissions, parallel active Sprints, and server collaboration from this MVP.
 
 ## Local storage
 
-- Current data: `forcetrack:tasks:v2`
-- Read-only migration input: `forcetrack:tasks:v1`
-- Preferences: `forcetrack:preferences:v1`
-- Last invalid payload retained for recovery: `forcetrack:recovery:last-invalid`
+- Current workspace: `forcetrack:workspace:v3`
+- Current preferences: `forcetrack:preferences:v2`
+- Onboarding completion: `forcetrack:onboarding:v1`
+- Read-only migration inputs: `forcetrack:tasks:v2`, `forcetrack:tasks:v1`, and
+  `forcetrack:preferences:v1`
+- Recovery backups: `forcetrack:recovery:workspace:last-invalid` and
+  `forcetrack:recovery:preferences:last-invalid`
 
-When V2 is absent, a valid V1 snapshot is migrated once without rewriting the
-V1 value. An existing but corrupt V2 snapshot is recovered from seed data and
-is never replaced by stale V1 data.
+A valid V3 workspace always wins. When V3 is absent, the repository wraps valid
+V2 data as the default `FT` project or migrates V1 through V2. Legacy values are
+retained unchanged, and corrupt current payloads are backed up before recovery.
 
 ## Quality checks
 
@@ -112,8 +117,9 @@ Backlog, Board, and Timeline continue to work.
 ## Branch workflow
 
 - `main` contains reviewed, accepted milestones.
-- Ongoing implementation starts from `dev`.
-- Changes are submitted through pull requests from `dev` into `main`.
+- Ongoing implementation uses short-lived topic branches from the latest
+  `main`; use `dev` only when a maintainer explicitly requests it.
+- Changes are submitted through focused pull requests into `main`.
 - A task should pass its documented acceptance gate before its pull request is
   merged.
 
@@ -122,6 +128,7 @@ Backlog, Board, and Timeline continue to work.
 ```text
 ForceTrack/
 ├── e2e/                  # Playwright browser tests
+├── docs/wiki/            # Secondary-development and collaboration guide
 ├── public/               # Static assets
 ├── src/
 │   ├── app/              # Application shell and providers
@@ -139,6 +146,7 @@ ForceTrack/
 
 ## Documentation
 
+- [Developer wiki](./docs/wiki/README.md)
 - [Product requirements](./PRD.md)
 - [Technical design and implementation plan](./TECHNICAL_DESIGN.md)
 - [Release acceptance evidence](./ACCEPTANCE.md)
