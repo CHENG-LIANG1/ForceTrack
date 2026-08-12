@@ -50,6 +50,7 @@ test('moves a task across columns and preserves its status after reload', async 
   });
   const doneColumn = page.getByTestId('board-column-done');
   await expect(card).toBeVisible();
+  await expect(card.getByTestId('task-card-work-type')).toHaveText('Story');
   await expect(doneColumn.getByLabel('Done, 1 tasks')).toBeVisible();
 
   await dragCardToColumn(page, card, doneColumn);

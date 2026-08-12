@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         outline:
-          'border border-border bg-surface text-foreground hover:bg-surface-hover',
+          'border border-control-border bg-surface text-foreground hover:bg-surface-hover',
         unstyled: '',
       },
       size: {

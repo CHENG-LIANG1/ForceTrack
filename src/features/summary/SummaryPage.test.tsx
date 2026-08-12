@@ -92,6 +92,11 @@ describe('Summary page', () => {
     }
     expect(screen.getAllByText('Unassigned')).not.toHaveLength(0);
     expect(screen.getAllByText('Payments epic')).not.toHaveLength(0);
+    expect(
+      screen.getByRole('img', {
+        name: /To do 1, In progress 1, In review 0, Done 0/i,
+      }),
+    ).toBeVisible();
 
     const recentActivity = screen
       .getByRole('heading', { name: 'Recent activity' })

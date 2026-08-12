@@ -10,6 +10,11 @@ import { Button } from '@/components/ui/button';
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '@/domain/task';
 import { SummaryFilterPanel } from '@/features/summary/SummaryFilterPanel';
 import {
+  EMPTY_SUMMARY_FILTERS,
+  SUMMARY_METRIC_KEYS,
+} from '@/features/summary/summary-constants';
+import { SummaryStatusPie } from '@/features/summary/SummaryStatusPie';
+import {
   selectSummaryData,
   type SummaryFilters,
 } from '@/features/summary/summary-selectors';
@@ -19,7 +24,7 @@ import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
 export function SummaryPage() {
   const { t } = useTranslation();
   const { snapshot, isReady, createTask, updateTask, deleteTask } = useTasks();
-  const [filters, setFilters] = useState<SummaryFilters>({});
+  const [filters, setFilters] = useState<SummaryFilters>(EMPTY_SUMMARY_FILTERS);
   const { editor, setEditor, triggerRef, openCreate, openTask } =
     useTaskEditor();
   const selectedTask =
@@ -30,12 +35,9 @@ export function SummaryPage() {
     [filters, snapshot],
   );
 
-  const cards = [
-    ['created', data.overview.created],
-    ['updated', data.overview.updated],
-    ['completed', data.overview.completed],
-    ['dueSoon', data.overview.dueSoon],
-  ] as const;
+  const cards = SUMMARY_METRIC_KEYS.map(
+    (key) => [key, data.overview[key]] as const,
+  );
   const maxMemberLoad = Math.max(
     1,
     ...data.workload.map((entry) => entry.count),
@@ -45,7 +47,10 @@ export function SummaryPage() {
   );
 
   return (
-    <section className="workspace-page" aria-labelledby="summary-title">
+    <section
+      className="workspace-page summary-page"
+      aria-labelledby="summary-title"
+    >
       <PageHeader
         section="Summary"
         titleId="summary-title"
@@ -71,7 +76,7 @@ export function SummaryPage() {
           members={snapshot.members}
           tasks={snapshot.tasks}
           onChange={setFilters}
-          onClear={() => setFilters({})}
+          onClear={() => setFilters(EMPTY_SUMMARY_FILTERS)}
         />
       )}
 
@@ -95,33 +100,24 @@ export function SummaryPage() {
           <div className="summary-grid">
             <section className="summary-panel summary-status-panel">
               <h2>{t('summary.statusOverview')}</h2>
-              <div className="status-segments" aria-hidden="true">
-                {TASK_STATUSES.map((status) => {
-                  const count = data.status[status].count;
-                  return (
-                    <span
-                      key={status}
-                      className={`status-segment status-${status}`}
-                      style={{ flexGrow: count || 0.2 }}
-                    />
-                  );
-                })}
-              </div>
-              <div className="summary-breakdown-list">
-                {TASK_STATUSES.map((status) => {
-                  const count = data.status[status].count;
-                  return (
-                    <div key={status}>
-                      <span>
-                        <i className={`legend-dot status-${status}`} />
-                        {t(`task.status.${status}`)}
-                      </span>
-                      <strong>
-                        {count} · {Math.round(data.status[status].percent)}%
-                      </strong>
-                    </div>
-                  );
-                })}
+              <div className="summary-status-content">
+                <SummaryStatusPie status={data.status} />
+                <div className="summary-breakdown-list">
+                  {TASK_STATUSES.map((status) => {
+                    const count = data.status[status].count;
+                    return (
+                      <div key={status}>
+                        <span>
+                          <i className={`legend-dot status-${status}`} />
+                          {t(`task.status.${status}`)}
+                        </span>
+                        <strong>
+                          {count} · {Math.round(data.status[status].percent)}%
+                        </strong>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </section>
 

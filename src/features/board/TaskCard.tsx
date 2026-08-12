@@ -41,7 +41,18 @@ function TaskCardContent({ task, member }: TaskCardContentProps) {
 
   return (
     <>
-      <span className="task-card-key">{task.key}</span>
+      <span className="task-card-heading">
+        <span className="task-card-key">{task.key}</span>
+        <span
+          className={cn(
+            'task-card-work-type',
+            `task-card-work-type-${task.workType}`,
+          )}
+          data-testid="task-card-work-type"
+        >
+          {t(`task.workType.${task.workType}`)}
+        </span>
+      </span>
       <strong className="task-card-title">{task.title}</strong>
       <span className="task-card-meta">
         <span className={cn('task-priority', `task-priority-${task.priority}`)}>

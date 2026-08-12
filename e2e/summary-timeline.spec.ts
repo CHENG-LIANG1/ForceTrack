@@ -25,6 +25,7 @@ test('filters every Summary module and opens a task in the shared dialog', async
   await expect(
     page.getByRole('heading', { name: 'Work progress' }),
   ).toBeVisible();
+  await expect(page.locator('.summary-status-pie')).toBeVisible();
 
   await page.getByRole('checkbox', { name: 'Bug' }).click();
   await page.getByRole('checkbox', { name: 'Low priority' }).click();
@@ -41,6 +42,28 @@ test('filters every Summary module and opens a task in the shared dialog', async
   await expect(
     page.getByRole('dialog', { name: 'Task details' }),
   ).toBeVisible();
+});
+
+test('keeps Summary filter labels on the shared spacing rhythm', async ({
+  page,
+}) => {
+  await page.goto('/summary');
+
+  const filterGroups = page.locator('.summary-filter-grid fieldset');
+  await expect(filterGroups).toHaveCount(6);
+
+  for (const filterGroup of await filterGroups.all()) {
+    const legendBox = await filterGroup.locator('legend').boundingBox();
+    const contentBox = await filterGroup
+      .locator('.summary-filter-field-body')
+      .boundingBox();
+
+    expect(legendBox).not.toBeNull();
+    expect(contentBox).not.toBeNull();
+    expect(Math.round(contentBox!.y - (legendBox!.y + legendBox!.height))).toBe(
+      12,
+    );
+  }
 });
 
 test('centers Today and exposes unscheduled Timeline work', async ({
