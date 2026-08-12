@@ -13,10 +13,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { validateSprintFields, type SprintFields } from '@/domain/sprint';
+import {
+  validateSprintFields,
+  type Sprint,
+  type SprintFields,
+} from '@/domain/sprint';
 
 interface SprintDialogProps {
   open: boolean;
+  sprint?: Sprint | null;
   onOpenChange(open: boolean): void;
   onSave(fields: SprintFields): Promise<void>;
 }
@@ -30,16 +35,25 @@ const EMPTY_SPRINT: SprintFields = {
 
 export function SprintDialog({
   open,
+  sprint = null,
   onOpenChange,
   onSave,
 }: SprintDialogProps) {
   const { t, i18n } = useTranslation();
-  const [draft, setDraft] = useState<SprintFields>(EMPTY_SPRINT);
+  const initialDraft: SprintFields = sprint
+    ? {
+        name: sprint.name,
+        goal: sprint.goal,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+      }
+    : EMPTY_SPRINT;
+  const [draft, setDraft] = useState<SprintFields>(initialDraft);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const close = () => {
-    setDraft(EMPTY_SPRINT);
+    setDraft(initialDraft);
     setError(null);
     onOpenChange(false);
   };
@@ -52,9 +66,13 @@ export function SprintDialog({
       <DialogContent>
         <div className="task-dialog-heading">
           <div>
-            <DialogTitle>{t('sprint.createTitle')}</DialogTitle>
+            <DialogTitle>
+              {t(sprint ? 'sprint.editTitle' : 'sprint.createTitle')}
+            </DialogTitle>
             <DialogDescription>
-              {t('sprint.createDescription')}
+              {t(
+                sprint ? 'sprint.editDescription' : 'sprint.createDescription',
+              )}
             </DialogDescription>
           </div>
           <DialogClose asChild>
@@ -161,7 +179,9 @@ export function SprintDialog({
                 {t('task.actions.cancel')}
               </Button>
               <Button type="submit" size="dialog" disabled={saving}>
-                {saving ? t('task.actions.saving') : t('sprint.actions.create')}
+                {saving
+                  ? t('task.actions.saving')
+                  : t(sprint ? 'sprint.actions.save' : 'sprint.actions.create')}
               </Button>
             </div>
           </div>

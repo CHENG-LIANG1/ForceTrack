@@ -29,6 +29,14 @@
     "columnsLabel": "任务状态列",
     "columnCount": "{{status}}，{{count}} 个任务",
     "emptyColumn": "此阶段暂无任务。",
+    "activeSprint": "活动 Sprint",
+    "noGoal": "暂无 Sprint 目标",
+    "daysRemaining": "剩余 {{count}} 天",
+    "daysRemaining_one": "剩余 {{count}} 天",
+    "daysRemaining_other": "剩余 {{count}} 天",
+    "noSprintTitle": "当前没有活动 Sprint",
+    "noSprintDescription": "请先在 Backlog 中规划工作并启动 Sprint，任务才会显示在看板上。",
+    "openBacklog": "打开 Backlog",
     "addTask": "添加任务",
     "createInColumn": "在{{status}}中新建任务",
     "dnd": {
@@ -164,11 +172,26 @@
     "activeSprintHint": "当前在 Board 中显示的工作项",
     "backlogHint": "尚未承诺进入 Sprint 的工作项",
     "plannedSprintHint": "尚未开始的计划 Sprint",
+    "noSprintGoal": "暂无 Sprint 目标",
+    "schedule": {
+      "range": "{{start}} – {{end}}",
+      "starts": "{{date}} 开始",
+      "ends": "{{date}} 结束",
+      "unscheduled": "尚未设置日期"
+    },
     "itemCount": "{{count}} 个工作项",
+    "pointCount": "{{count}} 点",
+    "assignees": "负责人",
     "search": "搜索 Summary 或任务编号",
     "add": "添加工作项",
     "emptySprint": "当前 Sprint 还没有工作项。",
     "emptyBacklog": "Backlog 已清空。",
+    "filters": {
+      "allAssignees": "全部负责人",
+      "allTypes": "全部工作类型",
+      "allStatuses": "全部状态",
+      "allPriorities": "全部优先级"
+    },
     "dnd": {
       "instructions": "按空格键拿起工作项，使用方向键选择 Sprint 或 Backlog，再按空格键放下，或按 Escape 取消。",
       "pickedUp": "已拿起{{title}}。",
@@ -178,23 +201,38 @@
     }
   },
   "sprint": {
+    "status": {
+      "planned": "计划中",
+      "active": "进行中",
+      "completed": "已完成"
+    },
     "createTitle": "新建 Sprint",
     "createDescription": "创建一个规划容器，然后从 Backlog 安排工作项。",
+    "editTitle": "编辑 Sprint",
+    "editDescription": "更新 Sprint 名称、目标或日期。",
     "startTitle": "开始 Sprint",
-    "startDescription": "开始 {{name}} 前，请确认 Sprint 日期。",
+    "startDescription": "开始 {{name}} 前，请确认 Sprint 详情和日期。",
     "completeTitle": "完成 Sprint",
-    "completeDescription": "确定完成 {{name}}？{{count}} 个未完成工作项将退回 Backlog。",
+    "completeDescription": "确定完成 {{name}}？请选择 {{count}} 个未完成工作项的去向。",
+    "deleteTitle": "删除 Sprint",
+    "deleteDescription": "确定删除 {{name}}？其中的工作项将移动到 {{target}}。",
+    "selectTarget": "选择目标位置",
     "fields": {
       "name": "Sprint 名称",
       "goal": "Sprint 目标",
       "startDate": "开始日期",
-      "endDate": "结束日期"
+      "endDate": "结束日期",
+      "incompleteTarget": "未完成工作项移动到"
     },
     "actions": {
       "create": "新建 Sprint",
+      "save": "保存 Sprint",
+      "editLabel": "编辑 {{name}}",
+      "deleteLabel": "删除 {{name}}",
       "start": "开始 Sprint",
       "complete": "完成 Sprint",
-      "confirmComplete": "完成"
+      "confirmComplete": "完成",
+      "confirmDelete": "删除 Sprint"
     },
     "validation": {
       "name_required": "请输入 Sprint 名称。",

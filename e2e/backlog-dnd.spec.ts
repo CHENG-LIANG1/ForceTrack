@@ -49,6 +49,7 @@ test('drags work between a sprint and backlog without row arrow actions', async 
   const sprint = page.getByTestId('backlog-section:sprint-1');
   const backlog = page.getByTestId('backlog-section:__backlog__');
   const backlogItem = backlog.getByTestId('backlog-item-FT-2');
+  const secondBacklogItem = backlog.getByTestId('backlog-item-FT-6');
   await expect(backlogItem).toBeVisible();
   await expect(
     page.getByRole('button', { name: /Move to sprint/i }),
@@ -56,6 +57,42 @@ test('drags work between a sprint and backlog without row arrow actions', async 
   await expect(
     page.getByRole('button', { name: /Move to backlog/i }),
   ).toHaveCount(0);
+
+  await dragWorkItem(page, backlogItem, secondBacklogItem);
+  await expect
+    .poll(() =>
+      backlog
+        .locator('[data-testid^="backlog-item-"]')
+        .evaluateAll((items) => items.map((item) => item.textContent)),
+    )
+    .toEqual([
+      expect.stringContaining('Map timeline edge cases'),
+      expect.stringContaining('Prepare usability test script'),
+    ]);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem('forcetrack:tasks:v2');
+        if (!raw) return null;
+        const tasks = (
+          JSON.parse(raw) as {
+            tasks: Array<{
+              key: string;
+              rank: number;
+              status: string;
+            }>;
+          }
+        ).tasks;
+        return tasks
+          .filter((task) => task.key === 'FT-2' || task.key === 'FT-6')
+          .sort((left, right) => left.rank - right.rank)
+          .map(({ key, status }) => ({ key, status }));
+      }),
+    )
+    .toEqual([
+      { key: 'FT-6', status: 'done' },
+      { key: 'FT-2', status: 'todo' },
+    ]);
 
   await dragWorkItem(page, backlogItem, sprint);
   await expect(sprint.getByTestId('backlog-item-FT-2')).toBeVisible();

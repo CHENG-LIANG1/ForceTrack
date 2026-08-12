@@ -9,6 +9,10 @@ export interface BacklogDropTarget {
   sprintId: string | null;
 }
 
+export interface BacklogMoveTarget extends BacklogDropTarget {
+  toIndex: number;
+}
+
 export function backlogSectionId(sprintId: string | null): string {
   return `${SECTION_ID_PREFIX}${sprintId ?? BACKLOG_SECTION_VALUE}`;
 }
@@ -69,4 +73,33 @@ export function resolveBacklogDropTarget(
 
   const targetTask = tasks.find((task) => task.id === overId);
   return targetTask ? { sprintId: targetTask.sprintId } : null;
+}
+
+/** Maps a row or section drop to the full, unfiltered planning order. */
+export function resolveBacklogMoveTarget(
+  tasks: readonly Task[],
+  movingTaskId: string,
+  overId: string,
+): BacklogMoveTarget | null {
+  const movingTask = tasks.find((task) => task.id === movingTaskId);
+  const target = resolveBacklogDropTarget(tasks, overId);
+  if (!movingTask || !target) return null;
+
+  const orderedTargetTasks = tasks
+    .filter((task) => task.sprintId === target.sprintId)
+    .sort(
+      (left, right) =>
+        left.rank - right.rank || left.id.localeCompare(right.id),
+    );
+  const overTaskIndex = orderedTargetTasks.findIndex(
+    (task) => task.id === overId,
+  );
+
+  return {
+    sprintId: target.sprintId,
+    toIndex:
+      overTaskIndex >= 0
+        ? overTaskIndex
+        : orderedTargetTasks.filter((task) => task.id !== movingTask.id).length,
+  };
 }

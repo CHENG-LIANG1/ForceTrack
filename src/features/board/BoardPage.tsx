@@ -11,15 +11,21 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { Plus } from 'lucide-react';
+import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
+import { CalendarDays, ListTodo, Plus } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
 import { Button } from '@/components/ui/button';
 import { TASK_STATUSES, type TaskStatus } from '@/domain/task';
+import { CompleteSprintDialog } from '@/features/backlog/CompleteSprintDialog';
 import { BoardColumn } from '@/features/board/BoardColumn';
-import { selectActiveSprintTasks } from '@/features/board/board-selectors';
+import {
+  selectActiveSprint,
+  selectActiveSprintTasks,
+} from '@/features/board/board-selectors';
 import {
   boardKeyboardCoordinates,
   orderedTasksForStatus,
@@ -36,6 +42,7 @@ interface EditorState {
 
 export function BoardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     snapshot,
     isReady,
@@ -45,6 +52,7 @@ export function BoardPage() {
     updateTask,
     deleteTask,
     moveTask,
+    completeSprint,
   } = useTasks();
   const [editor, setEditor] = useState<EditorState>({
     open: false,
@@ -52,6 +60,7 @@ export function BoardPage() {
     createStatus: 'todo',
   });
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [overStatus, setOverStatus] = useState<TaskStatus | null>(null);
   const editorTriggerRef = useRef<HTMLElement | null>(null);
   const sensors = useSensors(
@@ -66,6 +75,21 @@ export function BoardPage() {
     () => (snapshot ? selectActiveSprintTasks(snapshot) : []),
     [snapshot],
   );
+  const activeSprint = snapshot ? selectActiveSprint(snapshot) : null;
+  const plannedSprints =
+    snapshot?.sprints.filter((sprint) => sprint.status === 'planned') ?? [];
+  const incompleteCount = boardTasks.filter(
+    (task) => task.status !== 'done',
+  ).length;
+  const remainingDays = activeSprint?.endDate
+    ? Math.max(
+        0,
+        differenceInCalendarDays(
+          parseISO(activeSprint.endDate),
+          startOfDay(new Date()),
+        ),
+      )
+    : null;
   const activeTask =
     snapshot?.tasks.find((task) => task.id === activeTaskId) ?? null;
   const activeMember =
@@ -181,14 +205,25 @@ export function BoardPage() {
           <h1 id="board-title">{t('board.title')}</h1>
           <p>{t('board.description')}</p>
         </div>
-        <Button
-          size="lg"
-          onClick={(event) => openCreate('todo', event.currentTarget)}
-          disabled={!isReady}
-        >
-          <Plus size={16} />
-          {t('task.actions.create')}
-        </Button>
+        {activeSprint ? (
+          <div className="board-heading-actions">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setCompleteDialogOpen(true)}
+            >
+              {t('sprint.actions.complete')}
+            </Button>
+            <Button
+              size="lg"
+              onClick={(event) => openCreate('todo', event.currentTarget)}
+              disabled={!isReady}
+            >
+              <Plus size={16} />
+              {t('task.actions.create')}
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {loadWasRecovered ? (
@@ -206,43 +241,74 @@ export function BoardPage() {
         <div className="board-loading" aria-busy="true">
           {t('board.loading')}
         </div>
+      ) : !activeSprint ? (
+        <div className="board-no-sprint">
+          <span aria-hidden="true">
+            <ListTodo size={24} />
+          </span>
+          <h2>{t('board.noSprintTitle')}</h2>
+          <p>{t('board.noSprintDescription')}</p>
+          <Button onClick={() => navigate('/backlog')}>
+            {t('board.openBacklog')}
+          </Button>
+        </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          accessibility={{
-            announcements,
-            screenReaderInstructions: {
-              draggable: t('board.dnd.instructions'),
-            },
-          }}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDragCancel={resetDragState}
-        >
-          <div className="board-scroll" aria-label={t('board.columnsLabel')}>
-            <div className="board-grid">
-              {TASK_STATUSES.map((status) => (
-                <BoardColumn
-                  key={status}
-                  status={status}
-                  tasks={orderedTasksForStatus(boardTasks, status)}
-                  members={snapshot.members}
-                  isDropTarget={overStatus === status}
-                  onCreate={openCreate}
-                  onOpenTask={openTask}
-                />
-              ))}
+        <>
+          <div className="active-sprint-summary">
+            <div>
+              <span>{t('board.activeSprint')}</span>
+              <strong>{activeSprint.name}</strong>
+              <p>{activeSprint.goal || t('board.noGoal')}</p>
+            </div>
+            <div className="active-sprint-dates">
+              <CalendarDays size={16} aria-hidden="true" />
+              <span>
+                {activeSprint.startDate} – {activeSprint.endDate}
+              </span>
+              {remainingDays !== null ? (
+                <strong>
+                  {t('board.daysRemaining', { count: remainingDays })}
+                </strong>
+              ) : null}
             </div>
           </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            accessibility={{
+              announcements,
+              screenReaderInstructions: {
+                draggable: t('board.dnd.instructions'),
+              },
+            }}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={resetDragState}
+          >
+            <div className="board-scroll" aria-label={t('board.columnsLabel')}>
+              <div className="board-grid">
+                {TASK_STATUSES.map((status) => (
+                  <BoardColumn
+                    key={status}
+                    status={status}
+                    tasks={orderedTasksForStatus(boardTasks, status)}
+                    members={snapshot.members}
+                    isDropTarget={overStatus === status}
+                    onCreate={openCreate}
+                    onOpenTask={openTask}
+                  />
+                ))}
+              </div>
+            </div>
 
-          <DragOverlay>
-            {activeTask ? (
-              <TaskCardOverlay task={activeTask} member={activeMember} />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+            <DragOverlay>
+              {activeTask ? (
+                <TaskCardOverlay task={activeTask} member={activeMember} />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </>
       )}
 
       {snapshot ? (
@@ -273,6 +339,15 @@ export function BoardPage() {
           }
         />
       ) : null}
+      <CompleteSprintDialog
+        key={activeSprint?.id ?? 'board-complete-sprint-closed'}
+        open={completeDialogOpen && activeSprint !== null}
+        sprint={activeSprint}
+        plannedSprints={plannedSprints}
+        incompleteCount={incompleteCount}
+        onOpenChange={setCompleteDialogOpen}
+        onConfirm={completeSprint}
+      />
     </section>
   );
 }

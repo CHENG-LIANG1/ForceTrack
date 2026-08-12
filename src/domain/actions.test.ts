@@ -103,7 +103,12 @@ describe('task action commands', () => {
       startSprintAction(
         withEmptyPlanned,
         planned.id,
-        { startDate: '2026-08-12', endDate: '2026-08-25' },
+        {
+          name: planned.name,
+          goal: planned.goal,
+          startDate: '2026-08-12',
+          endDate: '2026-08-25',
+        },
         makeDependencies(),
       ),
     ).toThrowError(new SprintLifecycleError('active_exists'));

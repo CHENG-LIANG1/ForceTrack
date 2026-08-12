@@ -23,12 +23,12 @@ export interface SprintFields {
   endDate: string | null;
 }
 
-export interface SprintStartFields {
-  startDate: string | null;
-  endDate: string | null;
-}
+export type SprintStartFields = SprintFields;
 
 export type SprintLifecycleIssue =
+  | 'name_required'
+  | 'name_too_long'
+  | 'goal_too_long'
   | 'dates_required'
   | 'invalid_date'
   | 'invalid_range'
@@ -63,6 +63,8 @@ export function validateSprintFields(fields: SprintFields): string | null {
 export function validateSprintStartFields(
   fields: SprintStartFields,
 ): SprintLifecycleIssue | null {
+  const fieldIssue = validateSprintFields(fields);
+  if (fieldIssue) return fieldIssue as SprintLifecycleIssue;
   if (!fields.startDate || !fields.endDate) return 'dates_required';
   if (!isCalendarDate(fields.startDate) || !isCalendarDate(fields.endDate)) {
     return 'invalid_date';
@@ -116,6 +118,8 @@ export function startSprint(
 
   return {
     ...sprint,
+    name: fields.name.trim(),
+    goal: fields.goal.trim(),
     startDate: fields.startDate,
     endDate: fields.endDate,
     status: 'active',

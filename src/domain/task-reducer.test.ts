@@ -267,7 +267,12 @@ describe('taskReducer', () => {
     });
     const startedSprint = startSprint(
       planned,
-      { startDate: '2026-08-12', endDate: '2026-08-25' },
+      {
+        name: planned.name,
+        goal: planned.goal,
+        startDate: '2026-08-12',
+        endDate: '2026-08-25',
+      },
       state.sprints,
       2,
       FIXED_NOW,

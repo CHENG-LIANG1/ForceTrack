@@ -903,6 +903,22 @@ select {
   color: var(--muted-foreground);
 }
 
+.backlog-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) repeat(4, minmax(140px, auto));
+  gap: 10px;
+  margin-top: 32px;
+}
+
+.backlog-filter-bar .work-search {
+  width: 100%;
+  margin-top: 0;
+}
+
+.backlog-filter-bar > .ui-select-trigger {
+  min-width: 140px;
+}
+
 .work-search:focus-within {
   border-color: var(--ring);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent);
@@ -977,6 +993,46 @@ select {
   font-size: 10px;
 }
 
+.backlog-section-heading {
+  min-width: 0;
+}
+
+.backlog-sprint-details {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.backlog-sprint-details > span:not(.sprint-status) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backlog-sprint-details > span:last-child {
+  flex: 0 0 auto;
+}
+
+.sprint-status {
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sprint-status-active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: var(--accent);
+}
+
 .backlog-section-meta > span {
   color: var(--muted-foreground);
   font-size: 11px;
@@ -993,6 +1049,47 @@ select {
   height: 32px;
   padding: 0 12px;
   font-size: 11px;
+}
+
+.sprint-icon-button {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--muted-foreground);
+}
+
+.sprint-icon-button:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+.backlog-assignee-summary {
+  display: inline-flex;
+  align-items: center;
+}
+
+.backlog-assignee-summary > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  margin-left: -5px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 9px;
+  font-weight: 720;
+}
+
+.backlog-assignee-summary > span:first-child {
+  margin-left: 0;
+}
+
+.backlog-assignee-summary small {
+  margin-left: 4px;
 }
 
 .backlog-list {
@@ -1012,7 +1109,7 @@ select {
   display: grid;
   min-width: 0;
   flex: 1;
-  grid-template-columns: 26px minmax(220px, 1fr) auto auto auto;
+  grid-template-columns: 26px minmax(220px, 1fr) auto auto auto 28px;
   align-items: center;
   gap: 12px;
   padding: 8px 12px 8px 18px;
@@ -1021,6 +1118,104 @@ select {
   color: var(--foreground);
   cursor: grab;
   text-align: left;
+}
+
+.backlog-assignee {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.board-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-sprint-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.active-sprint-summary span {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.active-sprint-summary strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+}
+
+.active-sprint-summary p {
+  margin: 4px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.active-sprint-dates {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--muted-foreground);
+}
+
+.active-sprint-dates strong {
+  grid-column: 2;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 11px;
+}
+
+.board-no-sprint {
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  margin-top: 38px;
+  padding: 48px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.board-no-sprint > span {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--muted);
+  color: var(--accent);
+}
+
+.board-no-sprint h2,
+.board-no-sprint p {
+  margin: 0;
+}
+
+.board-no-sprint p {
+  max-width: 460px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .backlog-item-main:active {
