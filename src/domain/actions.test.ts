@@ -223,4 +223,77 @@ describe('task action commands', () => {
       },
     });
   });
+
+  it('returns null for missing sprint commands and accepts a valid lifecycle target', () => {
+    const snapshot = makeSnapshot();
+    const fields = {
+      name: 'Missing',
+      goal: '',
+      startDate: '2026-08-12',
+      endDate: '2026-08-25',
+    };
+    expect(updateSprintAction(snapshot, 'missing', fields)).toBeNull();
+    expect(
+      startSprintAction(snapshot, 'missing', fields, makeDependencies()),
+    ).toBeNull();
+    expect(
+      completeSprintAction(snapshot, 'missing', null, makeDependencies()),
+    ).toBeNull();
+    expect(deleteSprintAction(snapshot, 'missing')).toBeNull();
+
+    const active = snapshot.sprints[0];
+    const planned = {
+      ...active,
+      id: 'planned-2',
+      status: 'planned' as const,
+      position: 1,
+      startDate: null,
+      endDate: null,
+      startedAt: null,
+    };
+    expect(
+      completeSprintAction(
+        makeSnapshot({ sprints: [active, planned] }),
+        active.id,
+        planned.id,
+        makeDependencies([], LATER_NOW),
+      ),
+    ).toEqual({
+      type: 'sprint/completed',
+      payload: {
+        sprintId: active.id,
+        completedAt: LATER_NOW,
+        incompleteTargetSprintId: planned.id,
+      },
+    });
+  });
+
+  it('validates explicit and default planned-sprint deletion targets', () => {
+    const active = makeSnapshot().sprints[0];
+    const planned = {
+      ...active,
+      id: 'planned-1',
+      status: 'planned' as const,
+      position: 1,
+      startDate: null,
+      endDate: null,
+      startedAt: null,
+    };
+    const snapshot = makeSnapshot({ sprints: [active, planned] });
+
+    expect(deleteSprintAction(snapshot, planned.id)).toEqual({
+      type: 'sprint/deleted',
+      payload: { sprintId: planned.id, taskTargetSprintId: null },
+    });
+    expect(deleteSprintAction(snapshot, planned.id, null)).toEqual({
+      type: 'sprint/deleted',
+      payload: { sprintId: planned.id, taskTargetSprintId: null },
+    });
+    expect(() => deleteSprintAction(snapshot, planned.id, active.id)).toThrow(
+      new SprintLifecycleError('invalid_target'),
+    );
+    expect(() => deleteSprintAction(snapshot, planned.id, planned.id)).toThrow(
+      new SprintLifecycleError('invalid_target'),
+    );
+  });
 });

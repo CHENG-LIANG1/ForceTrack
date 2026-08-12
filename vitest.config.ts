@@ -22,6 +22,31 @@ export default defineConfig({
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/main.tsx', 'src/**/*.d.ts', 'src/test/**'],
+      // Task 9 turns the documented risk-based targets into release-blocking gates.
+      thresholds: {
+        statements: 75,
+        branches: 70,
+        functions: 75,
+        lines: 75,
+        'src/domain/**': {
+          statements: 90,
+          branches: 90,
+          functions: 90,
+          lines: 90,
+        },
+        'src/features/**/*-selectors.ts': {
+          statements: 90,
+          branches: 90,
+          functions: 90,
+          lines: 90,
+        },
+        'src/infrastructure/**': {
+          statements: 90,
+          branches: 90,
+          functions: 90,
+          lines: 90,
+        },
+      },
     },
   },
 });

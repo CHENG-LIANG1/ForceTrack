@@ -457,4 +457,133 @@ describe('taskReducer', () => {
       }),
     ).toBe(state);
   });
+
+  it('rejects invalid write targets and duplicate entities without mutating state', () => {
+    const state = makeSnapshot();
+    const completed = {
+      ...state.sprints[0],
+      id: 'completed',
+      status: 'completed' as const,
+      position: 1,
+      completedAt: LATER_NOW,
+    };
+    const withCompleted = makeSnapshot({
+      sprints: [...state.sprints, completed],
+    });
+
+    expect(
+      taskReducer(withCompleted, {
+        type: 'task/created',
+        payload: makeTask({ id: 'new', key: 'FT-3', sprintId: completed.id }),
+      }),
+    ).toBe(withCompleted);
+    expect(
+      taskReducer(withCompleted, {
+        type: 'task/updated',
+        payload: makeTask({ id: 'missing', sprintId: null }),
+      }),
+    ).toBe(withCompleted);
+    expect(
+      taskReducer(withCompleted, {
+        type: 'backlog/task-ranked',
+        payload: {
+          taskId: 'task-1',
+          sprintId: completed.id,
+          toIndex: 0,
+          updatedAt: LATER_NOW,
+        },
+      }),
+    ).toBe(withCompleted);
+    expect(
+      taskReducer(state, {
+        type: 'sprint/created',
+        payload: state.sprints[0],
+      }),
+    ).toBe(state);
+    expect(
+      taskReducer(withCompleted, {
+        type: 'sprint/updated',
+        payload: { ...completed, name: 'Forbidden' },
+      }),
+    ).toBe(withCompleted);
+    expect(
+      taskReducer(state, {
+        type: 'member/created',
+        payload: state.members[0],
+      }),
+    ).toBe(state);
+    expect(
+      taskReducer(state, {
+        type: 'member/created',
+        payload: {
+          ...state.members[1],
+          id: 'new-member',
+          email: state.members[0].email.toUpperCase(),
+        },
+      }),
+    ).toBe(state);
+  });
+
+  it('guards invalid Sprint start, completion, and deletion transitions', () => {
+    const state = makeSnapshot();
+    const planned = {
+      ...state.sprints[0],
+      id: 'planned-empty',
+      status: 'planned' as const,
+      position: 1,
+      startDate: null,
+      endDate: null,
+      startedAt: null,
+    };
+    const withPlanned = makeSnapshot({ sprints: [...state.sprints, planned] });
+    const startedPayload = {
+      ...planned,
+      status: 'active' as const,
+      startDate: '2026-08-12',
+      endDate: '2026-08-25',
+      startedAt: LATER_NOW,
+    };
+
+    expect(
+      taskReducer(withPlanned, {
+        type: 'sprint/started',
+        payload: { sprintId: planned.id, sprint: startedPayload },
+      }),
+    ).toBe(withPlanned);
+    expect(
+      taskReducer(state, {
+        type: 'sprint/started',
+        payload: { sprintId: 'missing', sprint: startedPayload },
+      }),
+    ).toBe(state);
+    expect(
+      taskReducer(state, {
+        type: 'sprint/completed',
+        payload: {
+          sprintId: 'missing',
+          completedAt: LATER_NOW,
+          incompleteTargetSprintId: null,
+        },
+      }),
+    ).toBe(state);
+    expect(
+      taskReducer(state, {
+        type: 'sprint/completed',
+        payload: {
+          sprintId: state.sprints[0].id,
+          completedAt: LATER_NOW,
+          incompleteTargetSprintId: state.sprints[0].id,
+        },
+      }),
+    ).toBe(state);
+    expect(
+      taskReducer(withPlanned, {
+        type: 'sprint/deleted',
+        payload: {
+          sprintId: planned.id,
+          taskTargetSprintId: planned.id,
+        },
+      }),
+    ).toBe(withPlanned);
+  });
 });
