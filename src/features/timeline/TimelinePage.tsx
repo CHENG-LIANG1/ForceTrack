@@ -1,30 +1,23 @@
-import { CalendarRange, Plus } from 'lucide-react';
-import { useMemo } from 'react';
+/** Renders the bounded read-only Timeline and delegates edits to the shared TaskDialog. */
+import { AlertTriangle, CalendarRange, Plus } from 'lucide-react';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useTasks } from '@/app/task-context';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
 import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
+import {
+  formatCalendarDate,
+  selectTimelineData,
+  TIMELINE_DAY_WIDTH,
+} from '@/features/timeline/timeline-selectors';
 
-const DAY_MS = 86_400_000;
-
-function parseDate(value: string): Date {
+function parseCalendarDate(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function formatDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
-
-function addDays(value: Date, days: number): Date {
-  return new Date(value.getTime() + days * DAY_MS);
-}
-
-function dayDiff(left: Date, right: Date): number {
-  return Math.round((right.getTime() - left.getTime()) / DAY_MS);
+  return new Date(year, month - 1, day);
 }
 
 export function TimelinePage() {
@@ -32,71 +25,85 @@ export function TimelinePage() {
   const { snapshot, isReady, createTask, updateTask, deleteTask } = useTasks();
   const { editor, setEditor, triggerRef, openCreate, openTask } =
     useTaskEditor();
+  const todayColumnRef = useRef<HTMLDivElement>(null);
   const selectedTask =
     snapshot?.tasks.find((task) => task.id === editor.taskId) ?? null;
-
-  const timeline = useMemo(() => {
-    const tasks = (snapshot?.tasks ?? []).filter(
-      (task) => task.startDate || task.dueDate,
-    );
-    const today = parseDate(formatDate(new Date()));
-    const dates = tasks.flatMap((task) =>
-      [task.startDate, task.dueDate].filter(
-        (value): value is string => !!value,
-      ),
-    );
-    const earliest = dates.length ? parseDate([...dates].sort()[0]) : today;
-    const latest = dates.length
-      ? parseDate([...dates].sort().at(-1) as string)
-      : addDays(today, 27);
-    const start = earliest < today ? earliest : today;
-    const end = latest > addDays(start, 27) ? latest : addDays(start, 27);
-    const dayCount = dayDiff(start, end) + 1;
-    return {
-      tasks,
-      today,
-      start,
-      dayCount,
-      days: Array.from({ length: dayCount }, (_, index) =>
-        addDays(start, index),
-      ),
-    };
-  }, [snapshot]);
-
-  const unscheduled =
-    snapshot?.tasks.filter((task) => !task.startDate && !task.dueDate).length ??
-    0;
+  const today = formatCalendarDate(new Date());
+  const timeline = useMemo(
+    () => selectTimelineData(snapshot?.tasks ?? [], today),
+    [snapshot, today],
+  );
   const locale = i18n.resolvedLanguage ?? i18n.language;
+  const formatRangeDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(parseCalendarDate(value));
 
   return (
     <section className="workspace-page" aria-labelledby="timeline-title">
-      <div className="board-heading-row">
-        <div className="page-heading compact-page-heading">
-          <p className="page-kicker">ForceTrack / Timeline</p>
-          <h1 id="timeline-title">{t('timeline.title')}</h1>
-          <p>{t('timeline.description')}</p>
-        </div>
-        <Button
-          size="lg"
-          disabled={!isReady}
-          onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
-        >
-          <Plus size={16} />
-          {t('task.actions.create')}
-        </Button>
-      </div>
+      <PageHeader
+        section="Timeline"
+        titleId="timeline-title"
+        title={t('timeline.title')}
+        description={t('timeline.description')}
+        actions={
+          <Button
+            size="lg"
+            disabled={!isReady}
+            onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
+          >
+            <Plus size={16} />
+            {t('task.actions.create')}
+          </Button>
+        }
+      />
 
-      {snapshot && timeline.tasks.length ? (
+      {snapshot && snapshot.tasks.length ? (
         <div className="timeline-panel">
           <div className="timeline-toolbar">
-            <strong>{t('timeline.dateRange')}</strong>
-            <span>{t('timeline.unscheduled', { count: unscheduled })}</span>
+            <div>
+              <strong>{t('timeline.dateRange')}</strong>
+              <span>
+                {t('timeline.range', {
+                  start: formatRangeDate(timeline.startDate),
+                  end: formatRangeDate(timeline.endDate),
+                })}
+              </span>
+            </div>
+            <div className="timeline-toolbar-actions">
+              {timeline.rangeClipped ? (
+                <span className="timeline-range-warning">
+                  <AlertTriangle size={13} aria-hidden="true" />
+                  {t('timeline.rangeClipped')}
+                </span>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  todayColumnRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center',
+                  })
+                }
+              >
+                <CalendarRange size={14} aria-hidden="true" />
+                {t('timeline.today')}
+              </Button>
+            </div>
           </div>
+
           <div className="timeline-scroll">
             <div
               className="timeline-table"
               style={
-                { '--timeline-days': timeline.dayCount } as React.CSSProperties
+                {
+                  '--timeline-days': timeline.days.length,
+                  '--timeline-day-width': `${TIMELINE_DAY_WIDTH}px`,
+                } as React.CSSProperties
               }
             >
               <div className="timeline-header-row">
@@ -104,72 +111,135 @@ export function TimelinePage() {
                   {t('task.list.title')}
                 </div>
                 <div className="timeline-calendar-header">
-                  {timeline.days.map((day) => (
-                    <div
-                      key={formatDate(day)}
-                      className={
-                        formatDate(day) === formatDate(timeline.today)
-                          ? 'is-today'
-                          : undefined
-                      }
-                    >
-                      <small>
-                        {new Intl.DateTimeFormat(locale, {
-                          weekday: 'short',
-                        }).format(day)}
-                      </small>
-                      <strong>{day.getUTCDate()}</strong>
-                    </div>
-                  ))}
+                  {timeline.days.map((date, index) => {
+                    const day = parseCalendarDate(date);
+                    const previousDate = timeline.days[index - 1];
+                    const startsMonth =
+                      index === 0 ||
+                      previousDate.slice(0, 7) !== date.slice(0, 7);
+                    return (
+                      <div
+                        key={date}
+                        ref={
+                          date === timeline.today ? todayColumnRef : undefined
+                        }
+                        className={
+                          date === timeline.today ? 'is-today' : undefined
+                        }
+                        aria-label={formatRangeDate(date)}
+                      >
+                        <small>
+                          {startsMonth
+                            ? new Intl.DateTimeFormat(locale, {
+                                month: 'short',
+                              }).format(day)
+                            : new Intl.DateTimeFormat(locale, {
+                                weekday: 'narrow',
+                              }).format(day)}
+                        </small>
+                        <strong>{day.getDate()}</strong>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {timeline.tasks.map((task) => {
-                const start = parseDate(
-                  task.startDate ?? (task.dueDate as string),
-                );
-                const end = parseDate(
-                  task.dueDate ?? (task.startDate as string),
-                );
-                const left =
-                  (dayDiff(timeline.start, start) / timeline.dayCount) * 100;
-                const width =
-                  ((dayDiff(start, end) + 1) / timeline.dayCount) * 100;
-                return (
-                  <div className="timeline-row" key={task.id}>
-                    <Button
-                      variant="unstyled"
-                      className="timeline-work-item"
-                      type="button"
-                      onClick={(event) =>
-                        openTask(task.id, event.currentTarget)
-                      }
-                    >
-                      <span>{task.key}</span>
-                      <strong>{task.title}</strong>
-                    </Button>
-                    <div className="timeline-track">
+              {timeline.scheduled.length ? (
+                timeline.scheduled.map(
+                  ({
+                    task,
+                    startIndex,
+                    duration,
+                    overdue,
+                    outOfRange,
+                    visibleStartDate,
+                  }) => (
+                    <div className="timeline-row" key={task.id}>
                       <Button
                         variant="unstyled"
+                        className="timeline-work-item"
                         type="button"
-                        className={`timeline-bar status-${task.status}`}
-                        style={{
-                          left: `${left}%`,
-                          width: `${Math.max(width, 1.4)}%`,
-                        }}
-                        aria-label={`${task.key}: ${task.title}`}
                         onClick={(event) =>
                           openTask(task.id, event.currentTarget)
                         }
                       >
-                        <span>{task.title}</span>
+                        <span>{task.key}</span>
+                        <strong>{task.title}</strong>
+                        {overdue ? (
+                          <small className="timeline-overdue">
+                            <AlertTriangle size={12} aria-hidden="true" />
+                            {t('timeline.overdue')}
+                          </small>
+                        ) : null}
                       </Button>
+                      <div className="timeline-track">
+                        {visibleStartDate ? (
+                          <Button
+                            variant="unstyled"
+                            type="button"
+                            className={`timeline-bar status-${task.status}`}
+                            style={{
+                              gridColumn: `${startIndex + 1} / span ${duration}`,
+                            }}
+                            aria-label={`${task.key}: ${task.title}`}
+                            onClick={(event) =>
+                              openTask(task.id, event.currentTarget)
+                            }
+                          >
+                            <span>{task.title}</span>
+                            {outOfRange ? (
+                              <small>{t('timeline.outOfRange')}</small>
+                            ) : null}
+                          </Button>
+                        ) : (
+                          <span className="timeline-out-of-range">
+                            {t('timeline.outOfRange')}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  ),
+                )
+              ) : (
+                <p className="timeline-scheduled-empty">
+                  {t('timeline.noScheduled')}
+                </p>
+              )}
             </div>
           </div>
+
+          {timeline.unscheduled.length ? (
+            <section
+              className="timeline-unscheduled"
+              aria-labelledby="timeline-unscheduled-title"
+            >
+              <header>
+                <div>
+                  <h2 id="timeline-unscheduled-title">
+                    {t('timeline.unscheduledTitle')}
+                  </h2>
+                  <span>
+                    {t('timeline.unscheduled', {
+                      count: timeline.unscheduled.length,
+                    })}
+                  </span>
+                </div>
+              </header>
+              <div className="timeline-unscheduled-list">
+                {timeline.unscheduled.map((task) => (
+                  <Button
+                    key={task.id}
+                    type="button"
+                    variant="outline"
+                    onClick={(event) => openTask(task.id, event.currentTarget)}
+                  >
+                    <span>{task.key}</span>
+                    {task.title}
+                  </Button>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : snapshot ? (
         <EmptyState

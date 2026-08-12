@@ -117,4 +117,39 @@ describe('summary selectors', () => {
     expect(data.workTypes.epic.percent).toBe(0);
     expect(data.recentActivity).toEqual([]);
   });
+
+  it('treats the exact 7-day and 14-day timestamps as inclusive boundaries', () => {
+    const boundaryTasks = [
+      makeTask({
+        id: 'seven-day',
+        key: 'FT-1',
+        createdAt: '2026-08-05T12:00:00.000Z',
+        updatedAt: '2026-08-05T12:00:00.000Z',
+      }),
+      makeTask({
+        id: 'older-than-seven',
+        key: 'FT-2',
+        createdAt: '2026-08-05T11:59:59.999Z',
+        updatedAt: '2026-08-05T11:59:59.999Z',
+        rank: 1,
+      }),
+      makeTask({
+        id: 'fourteen-day-done',
+        key: 'FT-3',
+        status: 'done',
+        createdAt: '2026-07-01T00:00:00.000Z',
+        updatedAt: '2026-07-29T12:00:00.000Z',
+        rank: 2,
+      }),
+    ];
+    const data = selectSummaryData(
+      makeSnapshot({ tasks: boundaryTasks, nextTaskNumber: 4 }),
+      {},
+      now,
+    );
+
+    expect(data.overview.created).toBe(1);
+    expect(data.overview.updated).toBe(1);
+    expect(data.status.done.count).toBe(1);
+  });
 });

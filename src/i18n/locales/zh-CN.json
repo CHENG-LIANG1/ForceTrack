@@ -159,10 +159,28 @@
     "dueSoon": "未来 7 天到期",
     "statusOverview": "状态概览",
     "priorityBreakdown": "优先级分布",
+    "workTypes": "工作类型",
     "teamWorkload": "团队负载",
+    "workProgress": "工作进度",
     "recentActivity": "近期活动",
     "noActivity": "暂无近期活动。",
-    "unassigned": "未分配"
+    "unassigned": "未分配",
+    "noEpicProgress": "当前视图暂无 Epic。",
+    "noEpicChildren": "暂无子工作项。",
+    "childCount": "{{count}} 个子工作项",
+    "statusCount": "{{status}} {{count}}",
+    "filters": {
+      "title": "筛选 Summary",
+      "active": "{{count}} 个筛选维度生效",
+      "clear": "清除筛选",
+      "dateRange": "日期范围",
+      "from": "开始",
+      "to": "结束",
+      "anyDate": "不限日期",
+      "clearDate": "清除日期",
+      "parent": "父级 Epic",
+      "noEpics": "暂无可选 Epic"
+    }
   },
   "backlog": {
     "title": "Backlog",
@@ -268,7 +286,13 @@
     "emptyDescription": "为工作项添加开始日期或截止日期，它就会出现在这里。",
     "today": "今天",
     "unscheduled": "{{count}} 个工作项尚未排期",
-    "dateRange": "未来四周"
+    "unscheduledTitle": "未排期工作",
+    "dateRange": "可见日期范围",
+    "range": "{{start}} – {{end}}",
+    "rangeClipped": "范围已限制为 366 天",
+    "outOfRange": "超出可视范围",
+    "overdue": "已逾期",
+    "noScheduled": "暂无已设置日期的工作项，请查看下方未排期列表。"
   },
   "a11y": {
     "forceTrackHome": "ForceTrack 看板",
