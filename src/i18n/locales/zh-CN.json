@@ -134,8 +134,10 @@
       "description": "{{title}} 将从看板和时间线中永久移除。"
     },
     "feedback": {
+      "region": "项目数据状态",
       "recovered": "已存储的任务数据无效，ForceTrack 已恢复演示任务。",
-      "saveFailed": "修改目前仍可见，但无法保存到此浏览器。"
+      "saveFailed": "修改目前仍可见，但无法保存到此浏览器。",
+      "dismiss": "关闭恢复提示"
     }
   },
   "validation": {
@@ -179,7 +181,8 @@
       "anyDate": "不限日期",
       "clearDate": "清除日期",
       "parent": "父级 Epic",
-      "noEpics": "暂无可选 Epic"
+      "noEpics": "暂无可选 Epic",
+      "noResults": "没有工作项符合当前 Summary 筛选条件。"
     }
   },
   "backlog": {
@@ -204,6 +207,7 @@
     "add": "添加工作项",
     "emptySprint": "当前 Sprint 还没有工作项。",
     "emptyBacklog": "Backlog 已清空。",
+    "noFilterResults": "没有工作项符合当前搜索和筛选条件。",
     "filters": {
       "allAssignees": "全部负责人",
       "allTypes": "全部工作类型",
@@ -268,15 +272,28 @@
   "member": {
     "createTitle": "添加成员",
     "createDescription": "添加后，该成员可立即成为负责人或报告人。",
+    "formTitle": "新成员",
     "fields": {
       "name": "姓名",
       "email": "邮箱"
     },
+    "list": {
+      "title": "项目成员",
+      "count_one": "{{count}} 位成员",
+      "count_other": "{{count}} 位成员",
+      "empty": "还没有项目成员。"
+    },
     "actions": {
-      "add": "添加成员"
+      "add": "添加成员",
+      "close": "关闭成员窗口"
     },
     "validation": {
-      "invalid": "请输入姓名和有效且未使用的邮箱。"
+      "name_required": "请输入姓名。",
+      "name_too_long": "姓名不能超过 80 个字符。",
+      "email_required": "请输入邮箱。",
+      "email_invalid": "请输入有效邮箱。",
+      "email_duplicate": "该邮箱已属于一位项目成员。",
+      "save_failed": "无法添加成员，已保留你的输入。"
     }
   },
   "timeline": {
@@ -297,5 +314,10 @@
   "a11y": {
     "forceTrackHome": "ForceTrack 看板",
     "preferenceControls": "语言和主题偏好"
+  },
+  "errorBoundary": {
+    "title": "ForceTrack 无法显示此页面",
+    "description": "请重新加载应用以恢复。最近一次成功保存的更改仍保留在此浏览器中。",
+    "reload": "重新加载 ForceTrack"
   }
 }

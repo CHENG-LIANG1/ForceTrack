@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -433,6 +434,13 @@ export function BacklogPage() {
     workTypeFilter,
   ]);
   const backlogTasks = selectTasksForPlanningSection(matchingTasks, null);
+  const hasActiveFilters = Boolean(
+    query.trim() ||
+    assigneeFilter !== ALL_FILTER_VALUE ||
+    workTypeFilter !== ALL_FILTER_VALUE ||
+    statusFilter !== ALL_FILTER_VALUE ||
+    priorityFilter !== ALL_FILTER_VALUE,
+  );
   const activeTask =
     snapshot?.tasks.find((task) => task.id === activeTaskId) ?? null;
   const activeSprintExists =
@@ -587,95 +595,105 @@ export function BacklogPage() {
         }
       />
 
-      <div className="backlog-filter-bar">
-        <label className="work-search">
-          <Search size={16} aria-hidden="true" />
-          <span className="visually-hidden">{t('backlog.search')}</span>
-          <Input
-            className="work-search-input"
-            type="search"
-            value={query}
-            placeholder={t('backlog.search')}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
-        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-          <SelectTrigger aria-label={t('task.fields.assignee')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_FILTER_VALUE}>
-              {t('backlog.filters.allAssignees')}
-            </SelectItem>
-            <SelectItem value="unassigned">{t('task.unassigned')}</SelectItem>
-            {snapshot?.members.map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                {member.name}
+      {!snapshot ? (
+        <LoadingState label={t('task.list.loading')} />
+      ) : (
+        <div className="backlog-filter-bar">
+          <label className="work-search">
+            <Search size={16} aria-hidden="true" />
+            <span className="visually-hidden">{t('backlog.search')}</span>
+            <Input
+              className="work-search-input"
+              type="search"
+              value={query}
+              placeholder={t('backlog.search')}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger aria-label={t('task.fields.assignee')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER_VALUE}>
+                {t('backlog.filters.allAssignees')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={workTypeFilter}
-          onValueChange={(value) =>
-            setWorkTypeFilter(value as TaskType | typeof ALL_FILTER_VALUE)
-          }
-        >
-          <SelectTrigger aria-label={t('task.fields.workType')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_FILTER_VALUE}>
-              {t('backlog.filters.allTypes')}
-            </SelectItem>
-            {TASK_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {t(`task.workType.${type}`)}
+              <SelectItem value="unassigned">{t('task.unassigned')}</SelectItem>
+              {snapshot?.members.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={workTypeFilter}
+            onValueChange={(value) =>
+              setWorkTypeFilter(value as TaskType | typeof ALL_FILTER_VALUE)
+            }
+          >
+            <SelectTrigger aria-label={t('task.fields.workType')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER_VALUE}>
+                {t('backlog.filters.allTypes')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={statusFilter}
-          onValueChange={(value) =>
-            setStatusFilter(value as TaskStatus | typeof ALL_FILTER_VALUE)
-          }
-        >
-          <SelectTrigger aria-label={t('task.fields.status')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_FILTER_VALUE}>
-              {t('backlog.filters.allStatuses')}
-            </SelectItem>
-            {TASK_STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`task.status.${status}`)}
+              {TASK_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {t(`task.workType.${type}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(value as TaskStatus | typeof ALL_FILTER_VALUE)
+            }
+          >
+            <SelectTrigger aria-label={t('task.fields.status')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER_VALUE}>
+                {t('backlog.filters.allStatuses')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={priorityFilter}
-          onValueChange={(value) =>
-            setPriorityFilter(value as TaskPriority | typeof ALL_FILTER_VALUE)
-          }
-        >
-          <SelectTrigger aria-label={t('task.fields.priority')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_FILTER_VALUE}>
-              {t('backlog.filters.allPriorities')}
-            </SelectItem>
-            {TASK_PRIORITIES.map((priority) => (
-              <SelectItem key={priority} value={priority}>
-                {t(`task.priority.${priority}`)}
+              {TASK_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {t(`task.status.${status}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={priorityFilter}
+            onValueChange={(value) =>
+              setPriorityFilter(value as TaskPriority | typeof ALL_FILTER_VALUE)
+            }
+          >
+            <SelectTrigger aria-label={t('task.fields.priority')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_FILTER_VALUE}>
+                {t('backlog.filters.allPriorities')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+              {TASK_PRIORITIES.map((priority) => (
+                <SelectItem key={priority} value={priority}>
+                  {t(`task.priority.${priority}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {snapshot && hasActiveFilters && matchingTasks.length === 0 ? (
+        <p className="filter-empty-state" role="status">
+          {t('backlog.noFilterResults')}
+        </p>
+      ) : null}
 
       {snapshot ? (
         <DndContext
@@ -842,6 +860,7 @@ export function BacklogPage() {
       />
       <MemberDialog
         open={memberDialogOpen}
+        members={snapshot?.members ?? []}
         onOpenChange={setMemberDialogOpen}
         onSave={createMember}
       />

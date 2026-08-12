@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { TASK_STATUSES, type TaskStatus } from '@/domain/task';
@@ -47,8 +48,6 @@ export function BoardPage() {
   const {
     snapshot,
     isReady,
-    loadWasRecovered,
-    persistenceFailed,
     createTask,
     updateTask,
     deleteTask,
@@ -228,21 +227,8 @@ export function BoardPage() {
         }
       />
 
-      {loadWasRecovered ? (
-        <div className="feedback-banner" role="status">
-          {t('task.feedback.recovered')}
-        </div>
-      ) : null}
-      {persistenceFailed ? (
-        <div className="feedback-banner feedback-banner-danger" role="alert">
-          {t('task.feedback.saveFailed')}
-        </div>
-      ) : null}
-
       {!snapshot ? (
-        <div className="board-loading" aria-busy="true">
-          {t('board.loading')}
-        </div>
+        <LoadingState label={t('board.loading')} />
       ) : !activeSprint ? (
         <div className="board-no-sprint">
           <span aria-hidden="true">

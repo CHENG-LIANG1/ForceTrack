@@ -39,4 +39,13 @@ describe('member domain', () => {
       ),
     ).toThrow(MemberValidationError);
   });
+
+  it.each([
+    [{ name: '', email: 'member@example.com' }, 'name_required'],
+    [{ name: 'x'.repeat(81), email: 'member@example.com' }, 'name_too_long'],
+    [{ name: 'Grace', email: '' }, 'email_required'],
+    [{ name: 'Grace', email: 'not-email' }, 'email_invalid'],
+  ] as const)('returns the precise issue for %o', (fields, expectedIssue) => {
+    expect(validateMemberFields(fields)).toBe(expectedIssue);
+  });
 });

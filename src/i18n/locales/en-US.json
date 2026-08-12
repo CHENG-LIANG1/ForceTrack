@@ -134,8 +134,10 @@
       "description": "{{title}} will be permanently removed from Board and Timeline."
     },
     "feedback": {
+      "region": "Project data status",
       "recovered": "Stored task data was invalid, so ForceTrack restored the demo tasks.",
-      "saveFailed": "Changes are visible for now, but could not be saved to this browser."
+      "saveFailed": "Changes are visible for now, but could not be saved to this browser.",
+      "dismiss": "Dismiss recovery message"
     }
   },
   "validation": {
@@ -179,7 +181,8 @@
       "anyDate": "Any date",
       "clearDate": "Clear date",
       "parent": "Parent epic",
-      "noEpics": "No epics available"
+      "noEpics": "No epics available",
+      "noResults": "No work items match the current summary filters."
     }
   },
   "backlog": {
@@ -204,6 +207,7 @@
     "add": "Add work item",
     "emptySprint": "No work is planned for the active sprint.",
     "emptyBacklog": "Your backlog is clear.",
+    "noFilterResults": "No work items match the current search and filters.",
     "filters": {
       "allAssignees": "All assignees",
       "allTypes": "All work types",
@@ -268,15 +272,28 @@
   "member": {
     "createTitle": "Add member",
     "createDescription": "New members can immediately be selected as assignee or reporter.",
+    "formTitle": "New member",
     "fields": {
       "name": "Name",
       "email": "Email"
     },
+    "list": {
+      "title": "Project members",
+      "count_one": "{{count}} member",
+      "count_other": "{{count}} members",
+      "empty": "No project members yet."
+    },
     "actions": {
-      "add": "Add member"
+      "add": "Add member",
+      "close": "Close member dialog"
     },
     "validation": {
-      "invalid": "Enter a name and a valid, unused email address."
+      "name_required": "Enter a name.",
+      "name_too_long": "Keep the name to 80 characters or fewer.",
+      "email_required": "Enter an email address.",
+      "email_invalid": "Enter a valid email address.",
+      "email_duplicate": "This email already belongs to a project member.",
+      "save_failed": "The member could not be added. Your input has been kept."
     }
   },
   "timeline": {
@@ -297,5 +314,10 @@
   "a11y": {
     "forceTrackHome": "ForceTrack board",
     "preferenceControls": "Language and theme preferences"
+  },
+  "errorBoundary": {
+    "title": "ForceTrack could not display this page",
+    "description": "Reload the app to recover. Your last successfully saved changes remain in this browser.",
+    "reload": "Reload ForceTrack"
   }
 }

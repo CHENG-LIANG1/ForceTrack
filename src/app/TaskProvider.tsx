@@ -35,6 +35,7 @@ import type { MemberFields } from '@/domain/member';
 import type { SprintFields, SprintStartFields } from '@/domain/sprint';
 import { LocalTaskRepository } from '@/infrastructure/local-task-repository';
 import type { TaskRepository } from '@/infrastructure/repositories';
+import { createBrowserSeedSnapshot } from '@/infrastructure/seed-data';
 
 interface TaskProviderProps extends PropsWithChildren {
   repository?: TaskRepository;
@@ -78,7 +79,13 @@ export function TaskProvider({
         dispatch({ type: 'hydrate', payload: result.snapshot });
         setLoadWasRecovered(result.kind === 'recovered');
       })
-      .catch(() => setPersistenceFailed(true))
+      .catch(() => {
+        // Storage access can fail independently of parsing; keep the full app usable in memory.
+        const fallbackSnapshot = createBrowserSeedSnapshot();
+        snapshotRef.current = fallbackSnapshot;
+        dispatch({ type: 'hydrate', payload: fallbackSnapshot });
+        setPersistenceFailed(true);
+      })
       .finally(() => setIsReady(true));
   }, [taskRepository]);
 
