@@ -99,6 +99,10 @@ describe('Backlog planning', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Add member' }));
     const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
+    expect(
+      within(memberDialog).getByRole('heading', { name: 'Project members' }),
+    ).toBeInTheDocument();
+    expect(within(memberDialog).getByText('ada@example.com')).toBeVisible();
     await user.type(within(memberDialog).getByLabelText(/Name/), 'Grace Kim');
     await user.type(
       within(memberDialog).getByLabelText(/Email/),
@@ -115,6 +119,32 @@ describe('Backlog planning', () => {
       email: 'grace@example.com',
       createdAt: '2026-08-11T08:00:00.000Z',
     });
+  });
+
+  it('keeps member input and identifies a duplicate email at the field', async () => {
+    const user = userEvent.setup();
+    const repository = renderBacklog();
+
+    await user.click(await screen.findByRole('button', { name: 'Add member' }));
+    const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
+    const nameInput = within(memberDialog).getByLabelText(/Name/);
+    const emailInput = within(memberDialog).getByLabelText(/Email/);
+    await user.type(nameInput, 'Another Ada');
+    await user.type(emailInput, ' ADA@EXAMPLE.COM ');
+    await user.click(
+      within(memberDialog).getByRole('button', { name: 'Add member' }),
+    );
+
+    expect(
+      within(memberDialog).getByText(
+        'This email already belongs to a project member.',
+      ),
+    ).toBeVisible();
+    expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(emailInput).toHaveFocus());
+    expect(nameInput).toHaveValue('Another Ada');
+    expect(emailInput).toHaveValue('ADA@EXAMPLE.COM');
+    expect(repository.saves).toHaveLength(0);
   });
 
   it('disables starting an empty planned sprint', async () => {

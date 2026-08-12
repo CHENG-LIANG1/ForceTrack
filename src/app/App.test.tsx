@@ -1,11 +1,16 @@
 /** Component-level acceptance coverage for the Task 2 shell, routes, locale, and theme controls. */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from '@/app/App';
 import { AppProviders } from '@/app/AppProviders';
 import type { UserPreferences } from '@/domain/member';
-import type { PreferencesRepository } from '@/infrastructure/repositories';
+import type {
+  LoadResult,
+  PreferencesRepository,
+  TaskRepository,
+} from '@/infrastructure/repositories';
+import { makeSnapshot } from '@/test/fixtures';
 
 class MemoryPreferencesRepository implements PreferencesRepository {
   readonly saves: UserPreferences[] = [];
@@ -25,15 +30,35 @@ class MemoryPreferencesRepository implements PreferencesRepository {
 function renderApp(
   path: string,
   preferences: UserPreferences = { locale: 'en-US', theme: 'light' },
+  taskRepository?: TaskRepository,
 ) {
   window.history.replaceState({}, '', path);
   const repository = new MemoryPreferencesRepository(preferences);
   render(
-    <AppProviders preferencesRepository={repository}>
+    <AppProviders
+      preferencesRepository={repository}
+      taskRepository={taskRepository}
+    >
       <App />
     </AppProviders>,
   );
   return repository;
+}
+
+class RecoveryTaskRepository implements TaskRepository {
+  constructor(
+    private readonly result: LoadResult | Error,
+    private readonly failSaves = false,
+  ) {}
+
+  async load(): Promise<LoadResult> {
+    if (this.result instanceof Error) throw this.result;
+    return this.result;
+  }
+
+  async save(): Promise<void> {
+    if (this.failSaves) throw new Error('storage unavailable');
+  }
 }
 
 describe('App shell', () => {
@@ -123,5 +148,70 @@ describe('App shell', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Settings' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('shows recovered storage feedback on every route and lets the user dismiss it', async () => {
+    const user = userEvent.setup();
+    renderApp(
+      '/summary',
+      { locale: 'en-US', theme: 'light' },
+      new RecoveryTaskRepository({
+        kind: 'recovered',
+        snapshot: makeSnapshot(),
+      }),
+    );
+
+    expect(
+      await screen.findByText(/restored the demo tasks/),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Dismiss recovery message' }),
+    );
+    await user.click(screen.getByRole('link', { name: 'Timeline' }));
+
+    expect(
+      screen.queryByText(/restored the demo tasks/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps an in-memory project usable when repository loading fails', async () => {
+    renderApp(
+      '/board',
+      { locale: 'en-US', theme: 'light' },
+      new RecoveryTaskRepository(new Error('read failed')),
+    );
+
+    expect(
+      await screen.findByText(/could not be saved to this browser/),
+    ).toBeVisible();
+    expect(screen.getByText('ForceTrack Sprint 1')).toBeVisible();
+    expect(screen.queryByText('Loading board…')).not.toBeInTheDocument();
+  });
+
+  it('keeps a new task visible while reporting a failed save', async () => {
+    const user = userEvent.setup();
+    renderApp(
+      '/board',
+      { locale: 'en-US', theme: 'light' },
+      new RecoveryTaskRepository(
+        { kind: 'loaded', snapshot: makeSnapshot() },
+        true,
+      ),
+    );
+
+    await user.click(
+      (await screen.findAllByRole('button', { name: 'New task' }))[0],
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Create task' });
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /Summary/ }),
+      'In-memory task',
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }));
+
+    expect(await screen.findByText('In-memory task')).toBeVisible();
+    expect(
+      screen.getByText(/could not be saved to this browser/),
+    ).toBeVisible();
   });
 });

@@ -74,6 +74,7 @@ export function AppHeader() {
               className="settings-trigger"
               variant="unstyled"
               type="button"
+              aria-label={t('preferences.settings')}
               aria-expanded={settingsOpen}
               aria-controls="preferences-panel"
             >

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useTasks } from '@/app/task-context';
 import { EmptyState } from '@/components/EmptyState';
+import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
@@ -60,7 +61,9 @@ export function TimelinePage() {
         }
       />
 
-      {snapshot && snapshot.tasks.length ? (
+      {!snapshot ? (
+        <LoadingState label={t('task.list.loading')} />
+      ) : snapshot.tasks.length ? (
         <div className="timeline-panel">
           <div className="timeline-toolbar">
             <div>
@@ -241,13 +244,13 @@ export function TimelinePage() {
             </section>
           ) : null}
         </div>
-      ) : snapshot ? (
+      ) : (
         <EmptyState
           icon={CalendarRange}
           title={t('timeline.emptyTitle')}
           description={t('timeline.emptyDescription')}
         />
-      ) : null}
+      )}
 
       {snapshot ? (
         <TaskDialog
