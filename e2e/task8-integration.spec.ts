@@ -112,7 +112,12 @@ test('persists a local member and synchronizes assignment across all four tabs',
     .click();
 
   await page.getByRole('link', { name: 'Board', exact: true }).click();
-  await page.getByRole('button', { name: 'New task' }).first().click();
+  // Wait for the SPA route to replace Backlog before targeting its shared action label.
+  await expect(page).toHaveURL(/\/board$/);
+  await expect(
+    page.getByRole('heading', { name: 'Board', level: 1 }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
   const taskDialog = page.getByRole('dialog', { name: 'Create task' });
   await taskDialog
     .getByRole('textbox', { name: /Summary/ })

@@ -1,8 +1,9 @@
-import { ShieldCheck, Trash2, UserPlus, X } from 'lucide-react';
+import { ShieldCheck, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { UserAvatar } from '@/components/UserAvatar';
+import { ManagementCreateButton } from '@/components/ManagementCreateButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,14 +321,9 @@ export function MemberManagementDialog({
           <div className="member-management-content">
             <div className="member-management-toolbar">
               <span>{t('member.list.count', { count: members.length })}</span>
-              <Button
-                variant="unstyled"
-                className="member-add-button"
-                onClick={() => setCreateOpen(true)}
-              >
-                <UserPlus size={14} aria-hidden="true" />
+              <ManagementCreateButton onClick={() => setCreateOpen(true)}>
                 {t('member.actions.add')}
-              </Button>
+              </ManagementCreateButton>
             </div>
             <ul
               className="member-management-list"
