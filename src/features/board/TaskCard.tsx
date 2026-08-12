@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/UserAvatar';
 import type { Member } from '@/domain/member';
 import type { Task } from '@/domain/task';
 import { cn } from '@/lib/utils';
@@ -17,15 +18,6 @@ interface TaskCardProps {
 interface TaskCardContentProps {
   task: Task;
   member: Member | null;
-}
-
-function memberInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
 }
 
 function formatCalendarDate(value: string, locale: string): string {
@@ -67,13 +59,12 @@ function TaskCardContent({ task, member }: TaskCardContentProps) {
             )}
           </span>
         ) : null}
-        <span
+        <UserAvatar
+          member={member}
           className="task-assignee"
-          title={member?.name ?? t('task.unassigned')}
-          aria-label={member?.name ?? t('task.unassigned')}
-        >
-          {member ? memberInitials(member.name) : '–'}
-        </span>
+          fallback="–"
+          fallbackLabel={t('task.unassigned')}
+        />
       </span>
     </>
   );
@@ -98,7 +89,12 @@ export function TaskCard({ task, member, onOpen }: TaskCardProps) {
   };
 
   return (
-    <li ref={setNodeRef} style={style} className="task-card-slot">
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="task-card-slot"
+      data-task-card-id={task.id}
+    >
       <Button
         {...attributes}
         {...listeners}

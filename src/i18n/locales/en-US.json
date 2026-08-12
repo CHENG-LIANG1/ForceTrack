@@ -27,10 +27,22 @@
     }
   },
   "help": {
-    "title": "Help and shortcuts",
-    "description": "Switching projects changes the project context while keeping you on the same page.",
-    "newTask": "New task",
-    "search": "Search"
+    "title": "Help",
+    "description": "Follow this workflow from planning through review.",
+    "sections": {
+      "plan": {
+        "title": "Plan work",
+        "description": "Create tasks in Backlog, set priority and dates, then drag them into a planned Sprint."
+      },
+      "deliver": {
+        "title": "Deliver the Sprint",
+        "description": "After starting a Sprint, drag Board cards to update status or click a card to edit details."
+      },
+      "review": {
+        "title": "Review progress",
+        "description": "Use Summary for project health and Timeline for scheduled or unscheduled work."
+      }
+    }
   },
   "onboarding": {
     "welcome": {
@@ -90,7 +102,7 @@
     },
     "help": {
       "title": "Come back whenever you need",
-      "description": "Open Help and shortcuts to review keyboard shortcuts or replay this tour at any time."
+      "description": "Open Help to review the core workflow or replay this tour at any time."
     },
     "progress": "{{current}} of {{total}}",
     "back": "Back",
@@ -344,6 +356,13 @@
     "emptySprint": "No work is planned for the active sprint.",
     "emptyBacklog": "Your backlog is clear.",
     "noFilterResults": "No work items match the current search and filters.",
+    "quick": {
+      "statusLabel": "Set status for {{key}}",
+      "dueDate": "Due date",
+      "dueDateLabel": "Set due date for {{key}}",
+      "priorityLabel": "Set priority for {{key}}",
+      "updateFailed": "Could not update {{key}}. Try again."
+    },
     "filters": {
       "allAssignees": "All assignees",
       "allTypes": "All work types",
@@ -351,7 +370,7 @@
       "allPriorities": "All priorities"
     },
     "dnd": {
-      "instructions": "To pick up a work item, press Space. Use the arrow keys to choose a sprint or the backlog, then press Space to drop, or Escape to cancel.",
+      "instructions": "To pick up a work item, press Space. Use the arrow keys to choose a row, then press Space to drop, or Escape to cancel.",
       "pickedUp": "Picked up {{title}}.",
       "over": "{{title}} is over {{target}}.",
       "dropped": "Moved {{title}} to {{target}}.",
@@ -427,6 +446,8 @@
     "formTitle": "New member",
     "fields": {
       "name": "Name",
+      "familyName": "Last name",
+      "givenName": "First name",
       "email": "Email"
     },
     "list": {
@@ -438,11 +459,14 @@
     "actions": {
       "add": "Add member",
       "close": "Close member dialog",
+      "closeCreate": "Close add member dialog",
       "remove": "Remove member",
       "removeNamed": "Remove {{name}}",
       "confirmRemove": "Remove member"
     },
     "validation": {
+      "family_name_required": "Enter a last name.",
+      "given_name_required": "Enter a first name.",
       "name_required": "Enter a name.",
       "name_too_long": "Keep the name to 80 characters or fewer.",
       "email_required": "Enter an email address.",

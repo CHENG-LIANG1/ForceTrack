@@ -75,6 +75,10 @@ describe('App shell', () => {
   it.each([
     ['/', '/projects/project-forcetrack/summary'],
     ['/unknown', '/projects/project-forcetrack/summary'],
+    [
+      '/projects/project-forcetrack/members',
+      '/projects/project-forcetrack/summary',
+    ],
   ])('redirects %s to the preferred project', async (path, expectedPath) => {
     renderApp(path);
 
@@ -140,7 +144,7 @@ describe('App shell', () => {
     );
   });
 
-  it('shows system, light, and dark themes and closes the user menu with Escape', async () => {
+  it('shows only light and dark themes and closes the user menu with Escape', async () => {
     const user = userEvent.setup();
     renderApp('/board', {
       locale: 'en-US',
@@ -152,16 +156,19 @@ describe('App shell', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Open user menu' }),
     );
-    expect(screen.getByText('Local user')).toBeVisible();
+    expect(screen.getByText('Lin Chen')).toBeVisible();
+    expect(screen.getByText('lin@forcetrack.local')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getByRole('button', { name: 'Light' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'System' })).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'System' }),
+    ).not.toBeInTheDocument();
 
     await user.keyboard('{Escape}');
-    expect(screen.queryByText('Local user')).not.toBeInTheDocument();
+    expect(screen.queryByText('lin@forcetrack.local')).not.toBeInTheDocument();
   });
 
   it('shows recovered storage feedback on every route and lets the user dismiss it', async () => {

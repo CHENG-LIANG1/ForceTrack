@@ -1,5 +1,6 @@
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US'] as const;
 export const THEME_PREFERENCES = ['system', 'light', 'dark'] as const;
+export const SELECTABLE_THEME_PREFERENCES = ['light', 'dark'] as const;
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];

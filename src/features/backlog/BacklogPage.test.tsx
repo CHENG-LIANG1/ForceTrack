@@ -103,19 +103,36 @@ describe('Backlog planning', () => {
       await screen.findByRole('button', { name: /Switch project/ }),
     );
     await user.click(screen.getByRole('button', { name: 'Manage members' }));
-    await user.click(await screen.findByRole('button', { name: 'Add member' }));
-    const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
+    const memberDialog = screen.getByRole('dialog', {
+      name: 'Project members',
+    });
     expect(
-      within(memberDialog).getByRole('heading', { name: 'Project members' }),
+      within(memberDialog).getByRole('heading', {
+        name: 'Project members',
+        level: 2,
+      }),
     ).toBeInTheDocument();
     expect(within(memberDialog).getByText('ada@example.com')).toBeVisible();
-    await user.type(within(memberDialog).getByLabelText(/Name/), 'Grace Kim');
+    await user.click(
+      within(memberDialog).getByRole('button', { name: 'Add member' }),
+    );
+    const createMemberDialog = screen.getByRole('dialog', {
+      name: 'Add member',
+    });
     await user.type(
-      within(memberDialog).getByLabelText(/Email/),
+      within(createMemberDialog).getByLabelText(/Last name/),
+      'Kim',
+    );
+    await user.type(
+      within(createMemberDialog).getByLabelText(/First name/),
+      'Grace',
+    );
+    await user.type(
+      within(createMemberDialog).getByLabelText(/Email/),
       'grace@example.com',
     );
     await user.click(
-      within(memberDialog).getByRole('button', { name: 'Add member' }),
+      within(createMemberDialog).getByRole('button', { name: 'Add member' }),
     );
 
     await waitFor(() => expect(repository.saves).toHaveLength(1));
@@ -137,24 +154,36 @@ describe('Backlog planning', () => {
       await screen.findByRole('button', { name: /Switch project/ }),
     );
     await user.click(screen.getByRole('button', { name: 'Manage members' }));
-    await user.click(await screen.findByRole('button', { name: 'Add member' }));
-    const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
-    const nameInput = within(memberDialog).getByLabelText(/Name/);
-    const emailInput = within(memberDialog).getByLabelText(/Email/);
-    await user.type(nameInput, 'Another Ada');
-    await user.type(emailInput, ' ADA@EXAMPLE.COM ');
+    const memberDialog = screen.getByRole('dialog', {
+      name: 'Project members',
+    });
     await user.click(
       within(memberDialog).getByRole('button', { name: 'Add member' }),
     );
+    const createMemberDialog = screen.getByRole('dialog', {
+      name: 'Add member',
+    });
+    const familyNameInput =
+      within(createMemberDialog).getByLabelText(/Last name/);
+    const givenNameInput =
+      within(createMemberDialog).getByLabelText(/First name/);
+    const emailInput = within(createMemberDialog).getByLabelText(/Email/);
+    await user.type(familyNameInput, 'Ada');
+    await user.type(givenNameInput, 'Another');
+    await user.type(emailInput, ' ADA@EXAMPLE.COM ');
+    await user.click(
+      within(createMemberDialog).getByRole('button', { name: 'Add member' }),
+    );
 
     expect(
-      within(memberDialog).getByText(
+      within(createMemberDialog).getByText(
         'This email already belongs to a project member.',
       ),
     ).toBeVisible();
     expect(emailInput).toHaveAttribute('aria-invalid', 'true');
     await waitFor(() => expect(emailInput).toHaveFocus());
-    expect(nameInput).toHaveValue('Another Ada');
+    expect(familyNameInput).toHaveValue('Ada');
+    expect(givenNameInput).toHaveValue('Another');
     expect(emailInput).toHaveValue('ADA@EXAMPLE.COM');
     expect(repository.saves).toHaveLength(0);
   });
@@ -173,6 +202,41 @@ describe('Backlog planning', () => {
     expect(
       await screen.findByRole('button', { name: 'Start sprint' }),
     ).toBeDisabled();
+  });
+
+  it('updates status and priority from the work-item row', async () => {
+    const user = userEvent.setup();
+    const repository = renderBacklog([], makeSnapshot());
+    const quickFields = await screen.findByTestId('backlog-quick-fields-FT-1');
+
+    await user.click(
+      within(quickFields).getByRole('combobox', {
+        name: 'Set status for FT-1',
+      }),
+    );
+    await user.click(screen.getByRole('option', { name: 'Done' }));
+
+    await waitFor(() => expect(repository.saves).toHaveLength(1));
+    expect(
+      repository.saves[0].tasks.find((task) => task.key === 'FT-1'),
+    ).toMatchObject({ status: 'done', priority: 'medium' });
+
+    await user.click(
+      within(quickFields).getByRole('combobox', {
+        name: 'Set priority for FT-1',
+      }),
+    );
+    await user.click(screen.getByRole('option', { name: 'High priority' }));
+
+    await waitFor(() => expect(repository.saves).toHaveLength(2));
+    expect(
+      repository.saves[1].tasks.find((task) => task.key === 'FT-1'),
+    ).toMatchObject({ status: 'done', priority: 'high' });
+    expect(
+      within(quickFields).getByRole('button', {
+        name: 'Set due date for FT-1',
+      }),
+    ).toBeVisible();
   });
 
   it('starts a populated sprint with editable details and default dates', async () => {

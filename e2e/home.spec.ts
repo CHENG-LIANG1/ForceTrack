@@ -48,7 +48,7 @@ test('navigates both routes, redirects fallbacks, and avoids horizontal overflow
   expect(pageErrors).toEqual([]);
 });
 
-test('defaults to the system theme and persists explicit settings across reloads', async ({
+test('resolves the legacy system theme and exposes only Light and Dark', async ({
   page,
 }) => {
   await page.goto('/board');
@@ -57,10 +57,20 @@ test('defaults to the system theme and persists explicit settings across reloads
   );
   await expect(page.locator('html')).toHaveAttribute('data-theme', systemTheme);
   await page.getByRole('button', { name: 'Open user menu' }).click();
-  await expect(page.getByRole('button', { name: 'System' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  await expect(page.getByRole('button', { name: 'System' })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', {
+      name: systemTheme === 'dark' ? 'Dark' : 'Light',
+    }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem('forcetrack:preferences:v2');
+        return raw ? (JSON.parse(raw) as { theme?: string }).theme : null;
+      }),
+    )
+    .toBe(systemTheme);
   await page.getByRole('button', { name: 'English' }).click();
   await page.getByRole('button', { name: 'Light' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -73,5 +83,5 @@ test('defaults to the system theme and persists explicit settings across reloads
     'aria-pressed',
     'true',
   );
-  await expect(page.getByRole('button', { name: 'System' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'System' })).toHaveCount(0);
 });

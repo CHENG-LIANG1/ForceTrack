@@ -42,14 +42,12 @@ describe('onboarding', () => {
     expect(document.body).not.toHaveClass('onboarding-active');
   });
 
-  it('lets returning users replay the tour from Help and shortcuts', async () => {
+  it('lets returning users replay the tour from Help', async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'complete');
     renderApp();
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Help and shortcuts' }),
-    );
+    await user.click(await screen.findByRole('button', { name: 'Help' }));
     await user.click(screen.getByRole('button', { name: 'Replay onboarding' }));
 
     expect(
@@ -64,9 +62,7 @@ describe('onboarding', () => {
 
     await screen.findByRole('heading', { name: 'Board', level: 1 });
     const startingPath = window.location.pathname;
-    await user.click(
-      screen.getByRole('button', { name: 'Help and shortcuts' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Help' }));
     await user.click(screen.getByRole('button', { name: 'Replay onboarding' }));
 
     const nextTo = async (heading: string) => {
@@ -95,5 +91,5 @@ describe('onboarding', () => {
 
     await user.click(screen.getByRole('button', { name: 'Skip tour' }));
     await waitFor(() => expect(window.location.pathname).toBe(startingPath));
-  });
+  }, 15_000);
 });

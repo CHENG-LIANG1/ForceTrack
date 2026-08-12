@@ -26,6 +26,12 @@ interface PreferencesProviderProps extends PropsWithChildren {
   repository?: PreferencesRepository;
 }
 
+function getSystemTheme(): ResolvedTheme {
+  return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
 /** Applies effective preferences to the root element before consumers render theme-dependent UI. */
 function applyDocumentPreferences(
   preferences: UserPreferences,
@@ -49,10 +55,6 @@ export function PreferencesProvider({
   const [preferences, setPreferences] =
     useState<UserPreferences>(initialPreferences);
   const preferencesRef = useRef(preferences);
-  const getSystemTheme = (): ResolvedTheme =>
-    globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
   const resolvedTheme: ResolvedTheme =
     preferences.theme === 'system' ? systemTheme : preferences.theme;
@@ -67,8 +69,17 @@ export function PreferencesProvider({
         const loadedPreferences = await repository.load();
         if (!isCurrent) return;
 
-        preferencesRef.current = loadedPreferences;
-        setPreferences(loadedPreferences);
+        // System was a previous UI option; resolve it once so Light or Dark is always selected.
+        const explicitPreferences: UserPreferences =
+          loadedPreferences.theme === 'system'
+            ? { ...loadedPreferences, theme: getSystemTheme() }
+            : loadedPreferences;
+        if (loadedPreferences.theme === 'system') {
+          await repository.save(explicitPreferences).catch(() => undefined);
+        }
+        if (!isCurrent) return;
+        preferencesRef.current = explicitPreferences;
+        setPreferences(explicitPreferences);
       } catch {
         // Browser storage may be unavailable; in-memory defaults keep the shell usable.
       } finally {

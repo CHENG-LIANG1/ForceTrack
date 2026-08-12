@@ -4,6 +4,7 @@ async function dragWorkItem(
   page: Page,
   item: Locator,
   target: Locator,
+  edge: 'before' | 'after' | 'center' = 'center',
 ): Promise<void> {
   await item.scrollIntoViewIfNeeded();
   const itemBox = await item.boundingBox();
@@ -20,11 +21,21 @@ async function dragWorkItem(
     itemBox.y + itemBox.height / 2 + 2,
     { steps: 3 },
   );
+  await expect(page.locator('.backlog-item-overlay').last()).toBeVisible();
   await page.mouse.move(
     targetBox.x + targetBox.width / 2,
-    targetBox.y + targetBox.height / 2,
+    edge === 'before'
+      ? targetBox.y + 4
+      : edge === 'after'
+        ? targetBox.y + targetBox.height - 4
+        : targetBox.y + targetBox.height / 2,
     { steps: 12 },
   );
+  if (edge !== 'center') {
+    await expect(target.locator('..')).toHaveClass(
+      new RegExp(`backlog-row-drop-${edge}`),
+    );
+  }
   await page.mouse.up();
 }
 
@@ -59,7 +70,7 @@ test('drags work between a sprint and backlog without row arrow actions', async 
     page.getByRole('button', { name: /Move to backlog/i }),
   ).toHaveCount(0);
 
-  await dragWorkItem(page, backlogItem, secondBacklogItem);
+  await dragWorkItem(page, backlogItem, secondBacklogItem, 'after');
   await expect
     .poll(() =>
       backlog
@@ -140,6 +151,53 @@ test('drags work between a sprint and backlog without row arrow actions', async 
       }),
     )
     .toBeNull();
+});
+
+test('updates status, due date, and priority directly in a backlog row', async ({
+  page,
+}) => {
+  await page.goto('/backlog');
+
+  const quickFields = page.getByTestId('backlog-quick-fields-FT-2');
+  await quickFields
+    .getByRole('combobox', { name: 'Set status for FT-2' })
+    .click();
+  await page.getByRole('option', { name: 'Done' }).click();
+
+  await quickFields
+    .getByRole('combobox', { name: 'Set priority for FT-2' })
+    .click();
+  await page.getByRole('option', { name: 'High priority' }).click();
+
+  await quickFields
+    .getByRole('button', { name: 'Set due date for FT-2' })
+    .click();
+  await page.locator('.rdp-day_button').filter({ hasText: /^20$/ }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem('forcetrack:workspace:v3');
+        if (!raw) return null;
+        return (
+          JSON.parse(raw) as {
+            projects: Array<{
+              tasks: Array<{
+                key: string;
+                status: string;
+                priority: string;
+                dueDate: string | null;
+              }>;
+            }>;
+          }
+        ).projects[0].tasks.find((task) => task.key === 'FT-2');
+      }),
+    )
+    .toMatchObject({
+      status: 'done',
+      priority: 'high',
+      dueDate: '2026-08-20',
+    });
 });
 
 test('supports moving a focused backlog item into a sprint with the keyboard', async ({

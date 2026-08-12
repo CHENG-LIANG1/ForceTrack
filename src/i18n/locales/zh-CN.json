@@ -27,10 +27,22 @@
     }
   },
   "help": {
-    "title": "帮助与快捷键",
-    "description": "项目切换只改变当前项目，页面导航保留在同一工作区。",
-    "newTask": "新建任务",
-    "search": "搜索"
+    "title": "使用帮助",
+    "description": "按照下面的流程完成从规划到复盘。",
+    "sections": {
+      "plan": {
+        "title": "规划任务",
+        "description": "在 Backlog 创建任务、设置优先级和日期，并拖入计划中的 Sprint。"
+      },
+      "deliver": {
+        "title": "推进 Sprint",
+        "description": "启动 Sprint 后，在看板中拖动卡片更新状态；点击卡片可编辑详情。"
+      },
+      "review": {
+        "title": "查看进度",
+        "description": "概览用于检查项目状态，时间线用于核对排期与未排期任务。"
+      }
+    }
   },
   "onboarding": {
     "welcome": {
@@ -90,7 +102,7 @@
     },
     "help": {
       "title": "随时回来查看",
-      "description": "打开“帮助与快捷键”，可以查看快捷键，也可以随时重新播放本引导。"
+      "description": "打开“使用帮助”，可以查看核心工作流程，也可以随时重新播放本引导。"
     },
     "progress": "第 {{current}} / {{total}} 步",
     "back": "上一步",
@@ -344,6 +356,13 @@
     "emptySprint": "当前 Sprint 还没有工作项。",
     "emptyBacklog": "Backlog 已清空。",
     "noFilterResults": "没有工作项符合当前搜索和筛选条件。",
+    "quick": {
+      "statusLabel": "设置 {{key}} 的状态",
+      "dueDate": "截止日期",
+      "dueDateLabel": "设置 {{key}} 的截止日期",
+      "priorityLabel": "设置 {{key}} 的优先级",
+      "updateFailed": "无法更新 {{key}}，请重试。"
+    },
     "filters": {
       "allAssignees": "全部负责人",
       "allTypes": "全部工作类型",
@@ -351,7 +370,7 @@
       "allPriorities": "全部优先级"
     },
     "dnd": {
-      "instructions": "按空格键拿起工作项，使用方向键选择 Sprint 或 Backlog，再按空格键放下，或按 Escape 取消。",
+      "instructions": "按空格键拿起工作项，使用方向键选择目标行，再按空格键放下，或按 Escape 取消。",
       "pickedUp": "已拿起{{title}}。",
       "over": "{{title}}位于{{target}}上方。",
       "dropped": "已将{{title}}移至{{target}}。",
@@ -427,6 +446,8 @@
     "formTitle": "新成员",
     "fields": {
       "name": "姓名",
+      "familyName": "姓氏",
+      "givenName": "名字",
       "email": "邮箱"
     },
     "list": {
@@ -438,11 +459,14 @@
     "actions": {
       "add": "添加成员",
       "close": "关闭成员窗口",
+      "closeCreate": "关闭新增成员窗口",
       "remove": "移除成员",
       "removeNamed": "移除 {{name}}",
       "confirmRemove": "确认移除"
     },
     "validation": {
+      "family_name_required": "请输入姓氏。",
+      "given_name_required": "请输入名字。",
       "name_required": "请输入姓名。",
       "name_too_long": "姓名不能超过 80 个字符。",
       "email_required": "请输入邮箱。",

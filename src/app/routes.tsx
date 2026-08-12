@@ -7,7 +7,6 @@ import { pageFromPath, projectPath, type ProjectPage } from '@/app/route-paths';
 import { LoadingState } from '@/components/LoadingState';
 import { BacklogPage } from '@/features/backlog/BacklogPage';
 import { BoardPage } from '@/features/board/BoardPage';
-import { MembersPage } from '@/features/members/MembersPage';
 import { EmptyWorkspacePage } from '@/features/projects/EmptyWorkspacePage';
 import { SummaryPage } from '@/features/summary/SummaryPage';
 import { TimelinePage } from '@/features/timeline/TimelinePage';
@@ -113,14 +112,6 @@ export function AppRoutes() {
         element={
           <ProjectPageGuard page="timeline">
             <TimelinePage />
-          </ProjectPageGuard>
-        }
-      />
-      <Route
-        path="/projects/:projectId/members"
-        element={
-          <ProjectPageGuard page="members">
-            <MembersPage />
           </ProjectPageGuard>
         }
       />

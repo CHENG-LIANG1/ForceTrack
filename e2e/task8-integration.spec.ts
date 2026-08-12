@@ -18,27 +18,93 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test('keeps shared page actions visually compact and touch accessible', async ({
+  page,
+}) => {
+  for (const [path, name] of [
+    ['/backlog', 'Create sprint'],
+    ['/board', 'Complete sprint'],
+  ] as const) {
+    await page.goto(path);
+    const metrics = await page
+      .getByRole('button', { name, exact: true })
+      .evaluate((button) => ({
+        height: button.getBoundingClientRect().height,
+        fontSize: getComputedStyle(button).fontSize,
+      }));
+    expect(metrics).toEqual({ height: 36, fontSize: '12px' });
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/backlog');
+  const mobileMetrics = await page
+    .getByRole('button', { name: 'Create sprint', exact: true })
+    .evaluate((button) => ({
+      height: button.getBoundingClientRect().height,
+      fontSize: getComputedStyle(button).fontSize,
+    }));
+  expect(mobileMetrics).toEqual({ height: 44, fontSize: '12px' });
+});
+
+test('shows a member name and email when hovering a user avatar', async ({
+  page,
+}) => {
+  await page.goto('/backlog');
+  const sprint = page.getByTestId('backlog-section:sprint-1');
+  const avatar = sprint.getByLabel('Lin Chen, lin@forcetrack.local').first();
+  await expect
+    .poll(() => avatar.evaluate((element) => getComputedStyle(element).cursor))
+    .toBe('default');
+  await avatar.hover();
+
+  const tooltip = page.getByRole('tooltip');
+  await expect(tooltip.getByText('Lin Chen', { exact: true })).toBeVisible();
+  await expect(
+    tooltip.getByText('lin@forcetrack.local', { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      tooltip.evaluate((element) => getComputedStyle(element).animationName),
+    )
+    .toBe('tooltip-enter');
+});
+
 test('persists a local member and synchronizes assignment across all four tabs', async ({
   page,
 }) => {
   await page.goto('/backlog');
   await page.getByRole('button', { name: /Switch project/ }).click();
   await page.getByRole('button', { name: 'Manage members' }).click();
-  await page.getByRole('button', { name: 'Add member' }).click();
-  let memberDialog = page.getByRole('dialog', { name: 'Add member' });
+  let memberDialog = page.getByRole('dialog', { name: 'Project members' });
   await expect(
-    memberDialog.getByRole('heading', { name: 'Project members' }),
+    memberDialog.getByRole('heading', {
+      name: 'Project members',
+      level: 2,
+    }),
   ).toBeVisible();
-  await memberDialog.getByRole('textbox', { name: /Name/ }).fill('Grace Kim');
-  await memberDialog
+  await memberDialog.getByRole('button', { name: 'Add member' }).click();
+  const createMemberDialog = page.getByRole('dialog', { name: 'Add member' });
+  await createMemberDialog
+    .getByRole('textbox', { name: /Last name/ })
+    .fill('Kim');
+  await createMemberDialog
+    .getByRole('textbox', { name: /First name/ })
+    .fill('Grace');
+  await createMemberDialog
     .getByRole('textbox', { name: /Email/ })
     .fill('grace@example.com');
-  await memberDialog.getByRole('button', { name: 'Add member' }).click();
-  await expect(memberDialog).toBeHidden();
+  await createMemberDialog
+    .getByRole('button', { name: 'Add member', exact: true })
+    .click();
+  await expect(memberDialog.getByText('Grace Kim')).toBeVisible();
+  await memberDialog
+    .getByRole('button', { name: 'Close member dialog' })
+    .click();
 
   await page.reload();
-  await page.getByRole('button', { name: 'Add member' }).click();
-  memberDialog = page.getByRole('dialog', { name: 'Add member' });
+  await page.getByRole('button', { name: /Switch project/ }).click();
+  await page.getByRole('button', { name: 'Manage members' }).click();
+  memberDialog = page.getByRole('dialog', { name: 'Project members' });
   await expect(memberDialog.getByText('Grace Kim')).toBeVisible();
   await expect(memberDialog.getByText('grace@example.com')).toBeVisible();
   await memberDialog
@@ -61,14 +127,18 @@ test('persists a local member and synchronizes assignment across all four tabs',
     name: /Edit FT-7: Local member integration/,
   });
   await expect(boardTask).toBeVisible();
-  await expect(boardTask.getByLabel('Grace Kim')).toBeVisible();
+  await expect(
+    boardTask.getByLabel('Grace Kim, grace@example.com'),
+  ).toBeVisible();
 
   await page.getByRole('link', { name: 'Backlog' }).click();
   const backlogTask = page
     .getByTestId('backlog-section:sprint-1')
     .getByTestId('backlog-item-FT-7');
   await expect(backlogTask).toBeVisible();
-  await expect(backlogTask.locator('[title="Grace Kim"]')).toBeVisible();
+  await expect(
+    backlogTask.getByLabel('Grace Kim, grace@example.com'),
+  ).toBeVisible();
 
   await page.getByRole('link', { name: 'Summary' }).click();
   await expect(page.getByRole('checkbox', { name: 'Grace Kim' })).toBeVisible();
