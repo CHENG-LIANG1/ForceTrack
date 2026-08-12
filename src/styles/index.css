@@ -2495,13 +2495,18 @@ select {
 }
 
 .member-add-button {
+  display: inline-flex;
   height: 30px;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 7px;
   background: transparent;
   color: var(--muted-foreground);
+  font-size: var(--font-size-label);
+  white-space: nowrap;
 }
 
 .member-add-button:hover {
