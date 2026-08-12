@@ -1,9 +1,10 @@
 /** Provides one shadcn dialog for reading, creating, editing, and deleting projects. */
-import { FolderOpen, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { FolderOpen, Pencil, Trash2, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useProjects } from '@/app/project-context';
+import { ManagementCreateButton } from '@/components/ManagementCreateButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,16 +118,14 @@ export function ProjectManagementDialog({
                 <span>
                   {t('project.manage.count', { count: projects.length })}
                 </span>
-                <Button
-                  size="dialog"
+                <ManagementCreateButton
                   onClick={() => {
                     setMode('create');
                     setError(null);
                   }}
                 >
-                  <Plus size={15} aria-hidden="true" />
                   {t('project.manage.create')}
-                </Button>
+                </ManagementCreateButton>
               </div>
               <ul className="project-management-list">
                 {projects.map((project) => {

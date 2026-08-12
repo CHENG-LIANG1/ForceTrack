@@ -2494,7 +2494,7 @@ select {
   margin: -10px 0 18px;
 }
 
-.member-add-button {
+.management-create-button {
   display: inline-flex;
   height: 30px;
   align-items: center;
@@ -2509,7 +2509,7 @@ select {
   white-space: nowrap;
 }
 
-.member-add-button:hover {
+.management-create-button:hover {
   border-color: var(--border-strong);
   background: var(--surface-hover);
   color: var(--foreground);
@@ -3858,7 +3858,7 @@ html.onboarding-active body {
 .project-management-content,
 .member-management-content {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 .project-management-toolbar,
 .member-management-toolbar {
@@ -3962,7 +3962,8 @@ html.onboarding-active body {
   align-items: center;
   gap: var(--space-2);
 }
-.project-management-icon-button {
+.project-management-icon-button,
+.member-remove {
   display: grid;
   width: var(--control-height-compact);
   height: var(--control-height-compact);
@@ -4040,11 +4041,6 @@ html.onboarding-active body {
   font-weight: var(--font-weight-bold);
 }
 .member-remove {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 7px;
   color: var(--muted-foreground);
 }
 .member-remove[aria-disabled='true'] {
@@ -4138,7 +4134,7 @@ html.onboarding-active body {
   .epic-progress-item header button,
   .dialog-actions button,
   .task-form-actions button,
-  .member-add-button,
+  .management-create-button,
   .icon-button,
   .sprint-icon-button {
     min-width: var(--touch-target-min);
