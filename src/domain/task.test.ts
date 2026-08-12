@@ -2,6 +2,7 @@ import {
   TaskValidationError,
   createTask,
   isCalendarDate,
+  taskToFields,
   updateTask,
   validateTaskFields,
 } from '@/domain/task';
@@ -98,6 +99,91 @@ describe('task domain', () => {
         makeSnapshot(),
         makeTaskFields({ title: '' }),
         makeDependencies(),
+      ),
+    ).toThrow(TaskValidationError);
+  });
+
+  it('covers every high-risk relationship and bounded-list validation path', () => {
+    const epic = makeTask({ id: 'epic-1', key: 'FT-9', workType: 'epic' });
+    const completedSprint = {
+      ...makeSnapshot().sprints[0],
+      status: 'completed' as const,
+      completedAt: LATER_NOW,
+    };
+    const issues = validateTaskFields(
+      makeTaskFields({
+        title: 'x'.repeat(101),
+        labels: Array.from({ length: 11 }, (_, index) => `label-${index}`),
+        storyPoints: 1.5,
+        dueDate: '2026-02-30',
+        reporterId: 'missing-reporter',
+        parentId: 'missing-parent',
+        sprintId: completedSprint.id,
+      }),
+      testMembers,
+      [epic],
+      'task-1',
+      [completedSprint],
+    );
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        { field: 'title', code: 'too_long' },
+        { field: 'labels', code: 'too_many_labels' },
+        { field: 'storyPoints', code: 'invalid_story_points' },
+        { field: 'dueDate', code: 'invalid_date' },
+        { field: 'reporterId', code: 'unknown_reporter' },
+        { field: 'parentId', code: 'invalid_parent' },
+        { field: 'sprintId', code: 'unknown_sprint' },
+      ]),
+    );
+    expect(
+      validateTaskFields(
+        makeTaskFields({ parentId: epic.id, sprintId: null }),
+        testMembers,
+        [epic],
+        'task-1',
+        [],
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([-1, 101])('rejects out-of-range story points: %s', (storyPoints) => {
+    expect(validateTaskFields(makeTaskFields({ storyPoints }))).toContainEqual({
+      field: 'storyPoints',
+      code: 'invalid_story_points',
+    });
+  });
+
+  it('normalizes labels, clears an Epic parent, and returns defensive field data', () => {
+    const created = createTask(
+      makeSnapshot(),
+      makeTaskFields({
+        title: '  Epic title  ',
+        workType: 'epic',
+        parentId: null,
+        labels: [' alpha ', 'alpha', ' beta '],
+      }),
+      makeDependencies(['epic-2']),
+    );
+    expect(created).toMatchObject({
+      title: 'Epic title',
+      parentId: null,
+      labels: ['alpha', 'beta'],
+    });
+
+    const fields = taskToFields(created);
+    fields.labels.push('mutated');
+    expect(created.labels).toEqual(['alpha', 'beta']);
+  });
+
+  it('throws before applying an invalid task update', () => {
+    expect(() =>
+      updateTask(
+        makeTask(),
+        makeTaskFields({ reporterId: 'missing' }),
+        testMembers,
+        { now: () => LATER_NOW },
       ),
     ).toThrow(TaskValidationError);
   });

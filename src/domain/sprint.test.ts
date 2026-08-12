@@ -4,6 +4,7 @@ import {
   SprintLifecycleError,
   startSprint,
   updateSprint,
+  validateSprintFields,
   validateSprintStartFields,
   type Sprint,
 } from '@/domain/sprint';
@@ -57,6 +58,50 @@ describe('sprint lifecycle', () => {
         endDate: '2026-08-19',
       }),
     ).toBe('invalid_range');
+  });
+
+  it.each([
+    [
+      'name_required',
+      { name: '   ', goal: '', startDate: null, endDate: null },
+    ],
+    [
+      'name_too_long',
+      { name: 'x'.repeat(81), goal: '', startDate: null, endDate: null },
+    ],
+    [
+      'goal_too_long',
+      { name: 'Sprint', goal: 'x'.repeat(501), startDate: null, endDate: null },
+    ],
+    [
+      'invalid_date',
+      {
+        name: 'Sprint',
+        goal: '',
+        startDate: '2026-02-30',
+        endDate: null,
+      },
+    ],
+    [
+      'invalid_date',
+      {
+        name: 'Sprint',
+        goal: '',
+        startDate: null,
+        endDate: '2026-02-30',
+      },
+    ],
+    [
+      'invalid_range',
+      {
+        name: 'Sprint',
+        goal: '',
+        startDate: '2026-08-20',
+        endDate: '2026-08-19',
+      },
+    ],
+  ] as const)('reports %s for invalid sprint fields', (issue, fields) => {
+    expect(validateSprintFields(fields)).toBe(issue);
   });
 
   it('starts a planned sprint with dates when no sprint is active', () => {
@@ -133,5 +178,57 @@ describe('sprint lifecycle', () => {
         { name: 'No', goal: '', startDate: null, endDate: null },
       ),
     ).toThrowError(new SprintLifecycleError('invalid_status'));
+  });
+
+  it('rejects starting a non-planned sprint and invalid start fields', () => {
+    const fields = {
+      name: plannedSprint.name,
+      goal: plannedSprint.goal,
+      startDate: '2026-08-12',
+      endDate: '2026-08-25',
+    };
+    expect(() =>
+      startSprint({ ...plannedSprint, status: 'active' }, fields, [
+        plannedSprint,
+      ]),
+    ).toThrowError(new SprintLifecycleError('invalid_status'));
+    expect(() =>
+      startSprint(plannedSprint, { ...fields, name: ' ' }, [plannedSprint]),
+    ).toThrowError(new SprintLifecycleError('name_required'));
+  });
+
+  it('uses safe timestamp fallbacks and updates valid sprint fields', () => {
+    const started = startSprint(
+      plannedSprint,
+      {
+        name: ' Updated during start ',
+        goal: ' Goal ',
+        startDate: '2026-08-12',
+        endDate: '2026-08-25',
+      },
+      [plannedSprint],
+    );
+    expect(started).toMatchObject({
+      name: 'Updated during start',
+      goal: 'Goal',
+      startedAt: null,
+    });
+    expect(completeSprint({ ...started, status: 'active' })).toMatchObject({
+      completedAt: null,
+    });
+    expect(
+      updateSprint(plannedSprint, {
+        name: ' Updated ',
+        goal: ' Goal ',
+        startDate: null,
+        endDate: null,
+      }),
+    ).toMatchObject({ name: 'Updated', goal: 'Goal' });
+    expect(() =>
+      createSprint(
+        { name: '', goal: '', startDate: null, endDate: null },
+        makeDependencies(),
+      ),
+    ).toThrow('Invalid sprint: name_required');
   });
 });

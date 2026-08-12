@@ -8,7 +8,12 @@ import {
   RepositoryError,
   type StorageAdapter,
 } from '@/infrastructure/repositories';
-import { makeLegacySnapshot, makeSnapshot } from '@/test/fixtures';
+import { migrateTaskSnapshotV1 } from '@/infrastructure/task-migration';
+import {
+  makeLegacySnapshot,
+  makeLegacyTask,
+  makeSnapshot,
+} from '@/test/fixtures';
 
 class MemoryStorage implements StorageAdapter {
   readonly values = new Map<string, string>();
@@ -76,6 +81,23 @@ describe('LocalTaskRepository', () => {
     expect(result.snapshot.tasks).toEqual([]);
     expect(result.snapshot.sprints).toEqual([]);
     expect(seedFactory).not.toHaveBeenCalled();
+  });
+
+  it('clamps a migrated Sprint range when legacy due dates precede start dates', () => {
+    const legacy = makeLegacySnapshot({
+      tasks: [
+        makeLegacyTask({
+          startDate: '2026-08-20',
+          dueDate: '2026-08-19',
+        }),
+      ],
+      nextTaskNumber: 2,
+    });
+
+    expect(migrateTaskSnapshotV1(legacy).sprints[0]).toMatchObject({
+      startDate: '2026-08-20',
+      endDate: '2026-08-20',
+    });
   });
 
   it('backs up corrupt V1 and recovers when no V2 exists', async () => {
@@ -155,6 +177,35 @@ describe('LocalTaskRepository', () => {
       operation: 'write',
     });
     expect(snapshot).toEqual(before);
+  });
+
+  it('reports a recovery error when corrupt data cannot be backed up', async () => {
+    const storage = new MemoryStorage();
+    storage.values.set(TASK_STORAGE_KEY, '{broken-v2');
+    storage.writeError = new DOMException('blocked', 'SecurityError');
+
+    await expect(new LocalTaskRepository(storage).load()).rejects.toMatchObject(
+      {
+        name: 'RepositoryError',
+        operation: 'recovery',
+      },
+    );
+  });
+
+  it('preserves an explicit write error raised while persisting a V1 migration', async () => {
+    const storage = new MemoryStorage();
+    storage.values.set(
+      LEGACY_TASK_STORAGE_KEY,
+      JSON.stringify(makeLegacySnapshot()),
+    );
+    storage.writeError = new DOMException('full', 'QuotaExceededError');
+
+    await expect(new LocalTaskRepository(storage).load()).rejects.toMatchObject(
+      {
+        name: 'RepositoryError',
+        operation: 'write',
+      },
+    );
   });
 
   it('rejects invalid snapshots before writing them', async () => {
