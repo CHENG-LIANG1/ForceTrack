@@ -1,5 +1,4 @@
 /** Renders every Summary module from one filtered, read-only selector result. */
-import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -23,10 +22,9 @@ import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
 
 export function SummaryPage() {
   const { t } = useTranslation();
-  const { snapshot, isReady, createTask, updateTask, deleteTask } = useTasks();
+  const { snapshot, updateTask, deleteTask } = useTasks();
   const [filters, setFilters] = useState<SummaryFilters>(EMPTY_SUMMARY_FILTERS);
-  const { editor, setEditor, triggerRef, openCreate, openTask } =
-    useTaskEditor();
+  const { editor, setEditor, triggerRef, openTask } = useTaskEditor();
   const selectedTask =
     snapshot?.tasks.find((task) => task.id === editor.taskId) ?? null;
 
@@ -52,20 +50,11 @@ export function SummaryPage() {
       aria-labelledby="summary-title"
     >
       <PageHeader
-        section="Summary"
+        onboardingTarget="page-summary"
+        section={t('nav.summary')}
         titleId="summary-title"
         title={t('summary.title')}
         description={t('summary.description')}
-        actions={
-          <Button
-            size="lg"
-            disabled={!isReady}
-            onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
-          >
-            <Plus size={16} />
-            {t('task.actions.create')}
-          </Button>
-        }
       />
 
       {!snapshot ? (
@@ -288,7 +277,7 @@ export function SummaryPage() {
           onSave={(fields) =>
             editor.taskId
               ? updateTask(editor.taskId, fields)
-              : createTask(fields)
+              : Promise.resolve()
           }
           onDelete={
             editor.taskId

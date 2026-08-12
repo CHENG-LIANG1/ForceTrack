@@ -18,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { useProjects } from '@/app/project-context';
+import { projectRoutes } from '@/app/route-paths';
 import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -45,6 +47,7 @@ interface EditorState {
 export function BoardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { currentProject } = useProjects();
   const {
     snapshot,
     isReady,
@@ -200,7 +203,8 @@ export function BoardPage() {
   return (
     <section className="workspace-page" aria-labelledby="board-title">
       <PageHeader
-        section="Board"
+        onboardingTarget="page-board"
+        section={t('nav.board')}
         titleId="board-title"
         title={t('board.title')}
         description={t('board.description')}
@@ -236,7 +240,12 @@ export function BoardPage() {
           </span>
           <h2>{t('board.noSprintTitle')}</h2>
           <p>{t('board.noSprintDescription')}</p>
-          <Button onClick={() => navigate('/backlog')}>
+          <Button
+            onClick={() =>
+              currentProject &&
+              navigate(projectRoutes.backlog(currentProject.id))
+            }
+          >
             {t('board.openBacklog')}
           </Button>
         </div>

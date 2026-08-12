@@ -28,6 +28,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.removeItem('forcetrack:tasks:v2');
     localStorage.removeItem('forcetrack:tasks:v1');
+    localStorage.removeItem('forcetrack:workspace:v3');
     localStorage.setItem(
       'forcetrack:preferences:v1',
       JSON.stringify({ locale: 'en-US', theme: 'dark' }),
@@ -134,16 +135,18 @@ test('synchronizes created dates and completion across Board, Timeline, and Summ
 
   const persisted = await page.evaluate(() => {
     const snapshot = JSON.parse(
-      localStorage.getItem('forcetrack:tasks:v2') ?? '{}',
+      localStorage.getItem('forcetrack:workspace:v3') ?? '{}',
     ) as {
-      tasks?: Array<{
-        title: string;
-        status: string;
-        startDate: string | null;
-        dueDate: string | null;
+      projects?: Array<{
+        tasks: Array<{
+          title: string;
+          status: string;
+          startDate: string | null;
+          dueDate: string | null;
+        }>;
       }>;
     };
-    return snapshot.tasks?.find(
+    return snapshot.projects?.[0].tasks.find(
       (task) => task.title === 'Task 9 synchronized work',
     );
   });

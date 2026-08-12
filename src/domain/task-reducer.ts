@@ -168,7 +168,7 @@ function nextTaskNumberForCreatedTask(
   currentNumber: number,
   task: Task,
 ): number {
-  const match = /^FT-(\d+)$/.exec(task.key);
+  const match = /^[A-Z][A-Z0-9]{1,9}-(\d+)$/.exec(task.key);
   const numberFromKey = match ? Number(match[1]) + 1 : currentNumber + 1;
   return Math.max(currentNumber + 1, numberFromKey);
 }

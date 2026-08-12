@@ -37,6 +37,8 @@ const preferencesRepository: PreferencesRepository = {
   load: async (): Promise<UserPreferences> => ({
     locale: 'en-US',
     theme: 'light',
+    lastProjectId: null,
+    recentProjectIds: [],
   }),
   save: async () => undefined,
 };
@@ -97,6 +99,10 @@ describe('Backlog planning', () => {
     const user = userEvent.setup();
     const repository = renderBacklog(['new-member']);
 
+    await user.click(
+      await screen.findByRole('button', { name: /Switch project/ }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Manage members' }));
     await user.click(await screen.findByRole('button', { name: 'Add member' }));
     const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
     expect(
@@ -113,18 +119,24 @@ describe('Backlog planning', () => {
     );
 
     await waitFor(() => expect(repository.saves).toHaveLength(1));
-    expect(repository.saves[0].members).toContainEqual({
-      id: 'new-member',
-      name: 'Grace Kim',
-      email: 'grace@example.com',
-      createdAt: '2026-08-11T08:00:00.000Z',
-    });
+    expect(repository.saves[0].members).toContainEqual(
+      expect.objectContaining({
+        id: 'new-member',
+        name: 'Grace Kim',
+        email: 'grace@example.com',
+        createdAt: '2026-08-11T08:00:00.000Z',
+      }),
+    );
   });
 
   it('keeps member input and identifies a duplicate email at the field', async () => {
     const user = userEvent.setup();
     const repository = renderBacklog();
 
+    await user.click(
+      await screen.findByRole('button', { name: /Switch project/ }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Manage members' }));
     await user.click(await screen.findByRole('button', { name: 'Add member' }));
     const memberDialog = screen.getByRole('dialog', { name: 'Add member' });
     const nameInput = within(memberDialog).getByLabelText(/Name/);
@@ -208,7 +220,7 @@ describe('Backlog planning', () => {
     });
     expect(repository.saves[0].sprints[0].startDate).not.toBeNull();
     expect(repository.saves[0].sprints[0].endDate).not.toBeNull();
-    expect(window.location.pathname).toBe('/board');
+    expect(window.location.pathname).toBe('/projects/project-forcetrack/board');
     expect(screen.getByText('Launch')).toBeVisible();
     expect(screen.getByText('Ship it')).toBeVisible();
   });

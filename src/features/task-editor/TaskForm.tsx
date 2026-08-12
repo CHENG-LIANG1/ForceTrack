@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useProjects } from '@/app/project-context';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -16,7 +18,6 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Member } from '@/domain/member';
 import type { Sprint } from '@/domain/sprint';
 import {
-  ACTIVE_SPRINT_ID,
   TASK_PRIORITIES,
   TASK_STATUSES,
   TASK_TYPES,
@@ -120,7 +121,7 @@ export function TaskForm({
   tasks,
   sprints,
   initialStatus = 'todo',
-  initialSprintId = ACTIVE_SPRINT_ID,
+  initialSprintId = null,
   members,
   onSubmit,
   onCancel,
@@ -128,6 +129,7 @@ export function TaskForm({
   onDirtyChange,
 }: TaskFormProps) {
   const { t, i18n } = useTranslation();
+  const { currentProject } = useProjects();
   const baseline = useMemo(
     () =>
       initialFields(
@@ -169,6 +171,7 @@ export function TaskForm({
       members,
       tasks,
       task?.id,
+      sprints,
     );
     setIssues(nextIssues);
 
@@ -220,12 +223,16 @@ export function TaskForm({
       <div className="task-context-grid">
         <div className="form-field">
           <label htmlFor="task-project">{t('task.fields.project')}</label>
-          <Select value="FT" disabled>
+          <Select value={currentProject?.key ?? 'FT'} disabled>
             <SelectTrigger id="task-project" name="project">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="FT">ForceTrack (FT)</SelectItem>
+              <SelectItem value={currentProject?.key ?? 'FT'}>
+                {currentProject
+                  ? `${currentProject.name} (${currentProject.key})`
+                  : 'ForceTrack (FT)'}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -483,21 +490,17 @@ export function TaskForm({
           <label htmlFor="task-story-points">
             {t('task.fields.storyPoints')}
           </label>
-          <Input
+          <NumberStepper
             id="task-story-points"
             name="storyPoints"
-            type="number"
-            min="0"
-            max="100"
-            step="1"
-            value={draft.storyPoints ?? ''}
+            min={0}
+            max={100}
+            step={1}
+            value={draft.storyPoints}
+            decrementLabel={t('task.actions.decreaseStoryPoints')}
+            incrementLabel={t('task.actions.increaseStoryPoints')}
             aria-invalid={Boolean(issueFor('storyPoints'))}
-            onChange={(event) =>
-              update(
-                'storyPoints',
-                event.target.value === '' ? null : Number(event.target.value),
-              )
-            }
+            onValueChange={(value) => update('storyPoints', value)}
           />
           {renderError('storyPoints')}
         </div>

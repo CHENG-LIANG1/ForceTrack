@@ -1,5 +1,5 @@
 /** Renders the bounded read-only Timeline and delegates edits to the shared TaskDialog. */
-import { AlertTriangle, CalendarRange, Plus } from 'lucide-react';
+import { AlertTriangle, CalendarRange } from 'lucide-react';
 import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,6 +8,12 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
 import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
 import {
@@ -23,9 +29,8 @@ function parseCalendarDate(value: string): Date {
 
 export function TimelinePage() {
   const { t, i18n } = useTranslation();
-  const { snapshot, isReady, createTask, updateTask, deleteTask } = useTasks();
-  const { editor, setEditor, triggerRef, openCreate, openTask } =
-    useTaskEditor();
+  const { snapshot, updateTask, deleteTask } = useTasks();
+  const { editor, setEditor, triggerRef, openTask } = useTaskEditor();
   const todayColumnRef = useRef<HTMLDivElement>(null);
   const selectedTask =
     snapshot?.tasks.find((task) => task.id === editor.taskId) ?? null;
@@ -45,20 +50,11 @@ export function TimelinePage() {
   return (
     <section className="workspace-page" aria-labelledby="timeline-title">
       <PageHeader
-        section="Timeline"
+        onboardingTarget="page-timeline"
+        section={t('nav.timeline')}
         titleId="timeline-title"
         title={t('timeline.title')}
         description={t('timeline.description')}
-        actions={
-          <Button
-            size="lg"
-            disabled={!isReady}
-            onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
-          >
-            <Plus size={16} />
-            {t('task.actions.create')}
-          </Button>
-        }
       />
 
       {!snapshot ? (
@@ -147,67 +143,74 @@ export function TimelinePage() {
                 </div>
               </div>
 
-              {timeline.scheduled.length ? (
-                timeline.scheduled.map(
-                  ({
-                    task,
-                    startIndex,
-                    duration,
-                    overdue,
-                    outOfRange,
-                    visibleStartDate,
-                  }) => (
-                    <div className="timeline-row" key={task.id}>
-                      <Button
-                        variant="unstyled"
-                        className="timeline-work-item"
-                        type="button"
-                        onClick={(event) =>
-                          openTask(task.id, event.currentTarget)
-                        }
-                      >
-                        <span>{task.key}</span>
-                        <strong>{task.title}</strong>
-                        {overdue ? (
-                          <small className="timeline-overdue">
-                            <AlertTriangle size={12} aria-hidden="true" />
-                            {t('timeline.overdue')}
-                          </small>
-                        ) : null}
-                      </Button>
-                      <div className="timeline-track">
-                        {visibleStartDate ? (
-                          <Button
-                            variant="unstyled"
-                            type="button"
-                            className={`timeline-bar status-${task.status}`}
-                            style={{
-                              gridColumn: `${startIndex + 1} / span ${duration}`,
-                            }}
-                            aria-label={`${task.key}: ${task.title}`}
-                            onClick={(event) =>
-                              openTask(task.id, event.currentTarget)
-                            }
-                          >
-                            <span>{task.title}</span>
-                            {outOfRange ? (
-                              <small>{t('timeline.outOfRange')}</small>
-                            ) : null}
-                          </Button>
-                        ) : (
-                          <span className="timeline-out-of-range">
-                            {t('timeline.outOfRange')}
-                          </span>
-                        )}
+              <TooltipProvider>
+                {timeline.scheduled.length ? (
+                  timeline.scheduled.map(
+                    ({
+                      task,
+                      startIndex,
+                      duration,
+                      overdue,
+                      outOfRange,
+                      visibleStartDate,
+                    }) => (
+                      <div className="timeline-row" key={task.id}>
+                        <Button
+                          variant="unstyled"
+                          className="timeline-work-item"
+                          type="button"
+                          onClick={(event) =>
+                            openTask(task.id, event.currentTarget)
+                          }
+                        >
+                          <span>{task.key}</span>
+                          <strong>{task.title}</strong>
+                          {overdue ? (
+                            <small className="timeline-overdue">
+                              <AlertTriangle size={12} aria-hidden="true" />
+                              {t('timeline.overdue')}
+                            </small>
+                          ) : null}
+                        </Button>
+                        <div className="timeline-track">
+                          {visibleStartDate ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="unstyled"
+                                  type="button"
+                                  className={`timeline-bar status-${task.status}`}
+                                  style={{
+                                    gridColumn: `${startIndex + 1} / span ${duration}`,
+                                  }}
+                                  aria-label={`${task.key}: ${task.title}`}
+                                  onClick={(event) =>
+                                    openTask(task.id, event.currentTarget)
+                                  }
+                                >
+                                  <span>{task.title}</span>
+                                  {outOfRange ? (
+                                    <small>{t('timeline.outOfRange')}</small>
+                                  ) : null}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{task.title}</TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="timeline-out-of-range">
+                              {t('timeline.outOfRange')}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ),
-                )
-              ) : (
-                <p className="timeline-scheduled-empty">
-                  {t('timeline.noScheduled')}
-                </p>
-              )}
+                    ),
+                  )
+                ) : (
+                  <p className="timeline-scheduled-empty">
+                    {t('timeline.noScheduled')}
+                  </p>
+                )}
+              </TooltipProvider>
             </div>
           </div>
 
@@ -268,7 +271,7 @@ export function TimelinePage() {
           onSave={(fields) =>
             editor.taskId
               ? updateTask(editor.taskId, fields)
-              : createTask(fields)
+              : Promise.resolve()
           }
           onDelete={
             editor.taskId

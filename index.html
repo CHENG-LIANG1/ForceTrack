@@ -16,12 +16,14 @@
         let locale = navigator.language.toLowerCase().startsWith('zh')
           ? 'zh-CN'
           : 'en-US';
-        let theme = 'dark';
+        let theme = matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
 
         try {
-          const rawPreferences = localStorage.getItem(
-            'forcetrack:preferences:v1',
-          );
+          const rawPreferences =
+            localStorage.getItem('forcetrack:preferences:v2') ??
+            localStorage.getItem('forcetrack:preferences:v1');
           const preferences = rawPreferences
             ? JSON.parse(rawPreferences)
             : null;
@@ -34,9 +36,13 @@
           }
           if (preferences?.theme === 'light' || preferences?.theme === 'dark') {
             theme = preferences.theme;
+          } else if (preferences?.theme === 'system') {
+            theme = matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
           }
         } catch {
-          // Invalid or unavailable storage falls back to the dark theme.
+          // Invalid or unavailable storage falls back to the system theme.
         }
 
         root.lang = locale;

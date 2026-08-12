@@ -276,6 +276,7 @@ export function createTask(
   snapshot: TaskSnapshotV2,
   input: CreateTaskInput,
   dependencies: DomainDependencies = browserDomainDependencies,
+  projectKey = FORCETRACK_PROJECT_KEY,
 ): Task {
   const issues = validateTaskFields(
     input,
@@ -291,7 +292,7 @@ export function createTask(
 
   return {
     id: dependencies.createId(),
-    key: `FT-${snapshot.nextTaskNumber}`,
+    key: `${projectKey}-${snapshot.nextTaskNumber}`,
     ...fields,
     position: snapshot.tasks.filter((task) => task.status === fields.status)
       .length,

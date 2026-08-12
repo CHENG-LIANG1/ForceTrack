@@ -23,6 +23,7 @@ export function PopoverAnchor(
 export function PopoverContent({
   className,
   align = 'center',
+  collisionPadding = 12,
   sideOffset = 4,
   ...props
 }: ComponentProps<typeof PopoverPrimitive.Content>) {
@@ -32,8 +33,9 @@ export function PopoverContent({
     <PopoverPrimitive.Portal container={dialogPortalContainer ?? undefined}>
       <PopoverPrimitive.Content
         align={align}
+        collisionPadding={collisionPadding}
         sideOffset={sideOffset}
-        className={cn('z-50 outline-none', className)}
+        className={cn('ui-popover-content z-50 outline-none', className)}
         {...props}
       />
     </PopoverPrimitive.Portal>

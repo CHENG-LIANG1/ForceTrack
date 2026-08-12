@@ -5,21 +5,15 @@ import {
   type PreferencesRepository,
   type StorageAdapter,
 } from '@/infrastructure/repositories';
-import { RECOVERY_STORAGE_KEY } from '@/infrastructure/local-task-repository';
-import { userPreferencesSchema } from '@/infrastructure/storage-schema';
+import {
+  userPreferencesSchema,
+  userPreferencesV1Schema,
+} from '@/infrastructure/storage-schema';
 
-export const PREFERENCES_STORAGE_KEY = 'forcetrack:preferences:v1';
-
-function hasLegacySystemTheme(
-  value: unknown,
-): value is Record<string, unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'theme' in value &&
-    value.theme === 'system'
-  );
-}
+export const PREFERENCES_STORAGE_KEY = 'forcetrack:preferences:v2';
+export const LEGACY_PREFERENCES_STORAGE_KEY = 'forcetrack:preferences:v1';
+export const PREFERENCES_RECOVERY_STORAGE_KEY =
+  'forcetrack:recovery:preferences:last-invalid';
 
 /** Maps the browser language to the two locales packaged with the MVP. */
 export function detectBrowserLocale(language?: string): SupportedLocale {
@@ -34,7 +28,9 @@ export function detectBrowserLocale(language?: string): SupportedLocale {
 export function createDefaultPreferences(language?: string): UserPreferences {
   return {
     locale: detectBrowserLocale(language),
-    theme: 'dark',
+    theme: 'system',
+    lastProjectId: null,
+    recentProjectIds: [],
   };
 }
 
@@ -53,33 +49,46 @@ export class LocalPreferencesRepository implements PreferencesRepository {
       throw new RepositoryError('read', error);
     }
 
-    if (rawPreferences === null) {
-      const preferences = this.validatedDefaults();
-      await this.save(preferences);
-      return preferences;
-    }
+    if (rawPreferences === null) return this.loadLegacyOrCreate();
 
     try {
-      const parsedPreferences: unknown = JSON.parse(rawPreferences);
-      const normalizedPreferences = hasLegacySystemTheme(parsedPreferences)
-        ? { ...parsedPreferences, theme: 'dark' }
-        : parsedPreferences;
-      const preferences = userPreferencesSchema.parse(normalizedPreferences);
-
-      if (normalizedPreferences !== parsedPreferences) {
-        await this.save(preferences);
-      }
-      return preferences;
+      return userPreferencesSchema.parse(JSON.parse(rawPreferences));
     } catch {
       const preferences = this.validatedDefaults();
       try {
-        this.storage.setItem(RECOVERY_STORAGE_KEY, rawPreferences);
+        this.storage.setItem(PREFERENCES_RECOVERY_STORAGE_KEY, rawPreferences);
       } catch (error) {
         throw new RepositoryError('recovery', error);
       }
       await this.save(preferences);
       return preferences;
     }
+  }
+
+  /** Migrates V1 exactly once and never lets a legacy preference override valid V2 data. */
+  private async loadLegacyOrCreate(): Promise<UserPreferences> {
+    let rawLegacy: string | null;
+    try {
+      rawLegacy = this.storage.getItem(LEGACY_PREFERENCES_STORAGE_KEY);
+    } catch (error) {
+      throw new RepositoryError('read', error);
+    }
+    const preferences = rawLegacy
+      ? (() => {
+          try {
+            const legacy = userPreferencesV1Schema.parse(JSON.parse(rawLegacy));
+            return {
+              ...legacy,
+              lastProjectId: null,
+              recentProjectIds: [],
+            } satisfies UserPreferences;
+          } catch {
+            return this.validatedDefaults();
+          }
+        })()
+      : this.validatedDefaults();
+    await this.save(preferences);
+    return preferences;
   }
 
   async save(preferences: UserPreferences): Promise<void> {

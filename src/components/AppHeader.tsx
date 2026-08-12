@@ -1,173 +1,191 @@
-import { Check, CircleDotDashed, Settings2 } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  CircleHelp,
+  Laptop,
+  Moon,
+  Sun,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 
 import { usePreferences } from '@/app/preferences-context';
-import { routes } from '@/app/route-paths';
+import { useOnboarding } from '@/app/onboarding-context';
+import { useProjects } from '@/app/project-context';
+import { projectRoutes } from '@/app/route-paths';
 import { Button } from '@/components/ui/button';
+import { MenuItem } from '@/components/ui/menu-item';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { SUPPORTED_LOCALES, THEME_PREFERENCES } from '@/domain/member';
+import { THEME_PREFERENCES, SUPPORTED_LOCALES } from '@/domain/member';
+import { ProjectSwitcher } from '@/features/projects/ProjectSwitcher';
 
-/** Provides persistent navigation plus compact language and theme controls. */
+const themeIcons = { system: Laptop, light: Sun, dark: Moon } as const;
+
+/** Maintains geometric navigation centering while separating project and user concerns. */
 export function AppHeader() {
   const { t } = useTranslation();
+  const { currentProject } = useProjects();
+  const { startOnboarding } = useOnboarding();
   const { preferences, isReady, setLocale, setTheme } = usePreferences();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const projectId = currentProject?.id;
 
   return (
     <header className="site-header">
-      <NavLink
-        className="brand"
-        to={routes.board}
-        aria-label={t('a11y.forceTrackHome')}
+      <div className="header-project">
+        <ProjectSwitcher />
+      </div>
+      <nav
+        className="header-nav"
+        aria-label={t('nav.primary')}
+        data-onboarding="primary-navigation"
       >
-        <span className="brand-mark" aria-hidden="true">
-          <CircleDotDashed size={17} strokeWidth={2.2} />
-        </span>
-        <span>ForceTrack</span>
-      </NavLink>
-
-      <nav className="header-nav" aria-label={t('nav.primary')}>
-        <NavLink
-          to={routes.summary}
-          className={({ isActive }) =>
-            `nav-item${isActive ? ' nav-item-active' : ''}`
-          }
-        >
-          {t('nav.summary')}
-        </NavLink>
-        <NavLink
-          to={routes.backlog}
-          className={({ isActive }) =>
-            `nav-item${isActive ? ' nav-item-active' : ''}`
-          }
-        >
-          {t('nav.backlog')}
-        </NavLink>
-        <NavLink
-          to={routes.board}
-          className={({ isActive }) =>
-            `nav-item${isActive ? ' nav-item-active' : ''}`
-          }
-        >
-          {t('nav.board')}
-        </NavLink>
-        <NavLink
-          to={routes.timeline}
-          className={({ isActive }) =>
-            `nav-item${isActive ? ' nav-item-active' : ''}`
-          }
-        >
-          {t('nav.timeline')}
-        </NavLink>
+        {projectId
+          ? (['summary', 'backlog', 'board', 'timeline'] as const).map(
+              (page) => (
+                <NavLink
+                  key={page}
+                  to={projectRoutes[page](projectId)}
+                  data-onboarding={`nav-${page}`}
+                  className={({ isActive }) =>
+                    `nav-item${isActive ? ' nav-item-active' : ''}`
+                  }
+                >
+                  {t(`nav.${page}`)}
+                </NavLink>
+              ),
+            )
+          : null}
       </nav>
-
-      <div className="preference-controls">
-        <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
+      <div className="header-user-actions" data-onboarding="help-entry">
+        <Popover open={helpOpen} onOpenChange={setHelpOpen}>
           <PopoverTrigger asChild>
             <Button
-              className="settings-trigger"
               variant="unstyled"
-              type="button"
-              aria-label={t('preferences.settings')}
-              aria-expanded={settingsOpen}
-              aria-controls="preferences-panel"
+              className="header-icon-button help-trigger"
+              aria-label={t('help.title')}
             >
-              <Settings2 size={15} aria-hidden="true" />
-              <span>{t('preferences.settings')}</span>
+              <CircleHelp size={18} aria-hidden="true" />
             </Button>
           </PopoverTrigger>
-
           <PopoverContent
-            className="preferences-panel preferences-popover"
-            id="preferences-panel"
-            aria-label={t('preferences.settings')}
+            className="compact-popover help-popover"
             align="end"
-            sideOffset={10}
+            sideOffset={8}
           >
-            <div className="preferences-panel-heading">
-              <h2>{t('preferences.settings')}</h2>
-              <p>{t('preferences.description')}</p>
+            <h2>{t('help.title')}</h2>
+            <p>{t('help.description')}</p>
+            <dl>
+              <div>
+                <dt>{t('help.newTask')}</dt>
+                <dd>
+                  <kbd>N</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>{t('help.search')}</dt>
+                <dd>
+                  <kbd>/</kbd>
+                </dd>
+              </div>
+            </dl>
+            <Button
+              variant="outline"
+              size="dialog"
+              className="help-onboarding-button"
+              onClick={() => {
+                setHelpOpen(false);
+                startOnboarding();
+              }}
+            >
+              {t('onboarding.replay')}
+            </Button>
+            <small>ForceTrack v0.1 · Local workspace</small>
+          </PopoverContent>
+        </Popover>
+
+        <Popover open={userOpen} onOpenChange={setUserOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="unstyled"
+              className="user-menu-trigger"
+              aria-label={t('preferences.userMenu')}
+            >
+              <span className="user-avatar" aria-hidden="true">
+                LU
+              </span>
+              <ChevronDown
+                className="user-menu-chevron"
+                size={14}
+                aria-hidden="true"
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="user-menu-popover"
+            align="end"
+            sideOffset={8}
+          >
+            <div className="local-identity">
+              <strong>{t('preferences.localUser')}</strong>
+              <small>{t('preferences.localMode')}</small>
             </div>
-
-            <section className="preference-section">
-              <div className="preference-section-heading">
-                <h3>{t('preferences.language')}</h3>
-                <p>{t('preferences.languageDescription')}</p>
-              </div>
-              <div
-                className="language-options"
-                role="group"
-                aria-label={t('preferences.language')}
-              >
-                {SUPPORTED_LOCALES.map((locale) => {
-                  const selected = preferences.locale === locale;
-                  return (
-                    <Button
-                      variant="unstyled"
-                      key={locale}
-                      type="button"
-                      aria-pressed={selected}
-                      disabled={!isReady}
-                      onClick={() => setLocale(locale)}
-                    >
-                      {t(`preferences.locale.${locale}`)}
-                      {selected ? <Check size={14} aria-hidden="true" /> : null}
-                    </Button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="preference-section">
-              <div className="preference-section-heading">
-                <h3>{t('preferences.theme')}</h3>
-                <p>{t('preferences.themeDescription')}</p>
-              </div>
-              <div
-                className="theme-options"
-                role="group"
-                aria-label={t('preferences.theme')}
-              >
+            <section className="user-menu-section">
+              <h2>{t('preferences.theme')}</h2>
+              <div className="menu-option-list">
                 {THEME_PREFERENCES.map((theme) => {
-                  const selected = preferences.theme === theme;
+                  const Icon = themeIcons[theme];
                   return (
-                    <Button
-                      className="theme-option-card"
-                      variant="unstyled"
+                    <MenuItem
                       key={theme}
-                      type="button"
-                      aria-label={t(`preferences.themeOption.${theme}`)}
-                      aria-pressed={selected}
+                      leading={<Icon size={15} />}
+                      trailing={
+                        preferences.theme === theme ? <Check size={14} /> : null
+                      }
+                      aria-pressed={preferences.theme === theme}
                       disabled={!isReady}
                       onClick={() => setTheme(theme)}
                     >
-                      <span
-                        className={`theme-preview theme-preview-${theme}`}
-                        aria-hidden="true"
-                      >
-                        <span className="theme-preview-sidebar" />
-                        <span className="theme-preview-header" />
-                        <span className="theme-preview-surface theme-preview-surface-large" />
-                        <span className="theme-preview-surface theme-preview-surface-small" />
-                        <span className="theme-preview-accent" />
-                      </span>
-                      <span className="theme-option-label">
-                        <span>{t(`preferences.themeOption.${theme}`)}</span>
-                        {selected ? (
-                          <Check size={14} aria-hidden="true" />
-                        ) : null}
-                      </span>
-                    </Button>
+                      {t(`preferences.themeOption.${theme}`)}
+                    </MenuItem>
                   );
                 })}
               </div>
             </section>
+            <section className="user-menu-section">
+              <h2>{t('preferences.language')}</h2>
+              <div className="menu-option-list">
+                {SUPPORTED_LOCALES.map((locale) => (
+                  <MenuItem
+                    key={locale}
+                    trailing={
+                      preferences.locale === locale ? <Check size={14} /> : null
+                    }
+                    aria-pressed={preferences.locale === locale}
+                    disabled={!isReady}
+                    onClick={() => setLocale(locale)}
+                  >
+                    {t(`preferences.locale.${locale}`)}
+                  </MenuItem>
+                ))}
+              </div>
+            </section>
+            <MenuItem
+              className="mobile-help-entry"
+              leading={<CircleHelp size={15} />}
+              onClick={() => {
+                setUserOpen(false);
+                startOnboarding();
+              }}
+            >
+              {t('onboarding.replay')}
+            </MenuItem>
           </PopoverContent>
         </Popover>
       </div>

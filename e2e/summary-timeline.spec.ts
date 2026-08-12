@@ -12,6 +12,15 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test('keeps Summary and Timeline read/edit only', async ({ page }) => {
+  await page.goto('/summary');
+  await expect(page.getByRole('button', { name: 'New task' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Timeline', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'New task' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Backlog', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'New task' })).toBeVisible();
+});
+
 test('filters every Summary module and opens a task in the shared dialog', async ({
   page,
 }) => {
@@ -77,6 +86,14 @@ test('centers Today and exposes unscheduled Timeline work', async ({
   await expect(
     page.getByRole('heading', { name: 'Unscheduled work' }),
   ).toBeVisible();
+
+  const clippedTimelineBar = page
+    .locator('.timeline-bar')
+    .filter({ hasText: 'Prepare usability test script' });
+  await clippedTimelineBar.hover();
+  await expect(page.getByRole('tooltip')).toHaveText(
+    'Prepare usability test script',
+  );
 
   await page.getByRole('button', { name: 'Today' }).click();
   await page.getByRole('button', { name: /Map timeline edge cases/ }).click();

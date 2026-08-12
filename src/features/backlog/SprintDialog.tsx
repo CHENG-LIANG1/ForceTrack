@@ -24,6 +24,7 @@ interface SprintDialogProps {
   sprint?: Sprint | null;
   onOpenChange(open: boolean): void;
   onSave(fields: SprintFields): Promise<void>;
+  onDelete?(sprint: Sprint): void;
 }
 
 const EMPTY_SPRINT: SprintFields = {
@@ -38,6 +39,7 @@ export function SprintDialog({
   sprint = null,
   onOpenChange,
   onSave,
+  onDelete,
 }: SprintDialogProps) {
   const { t, i18n } = useTranslation();
   const initialDraft: SprintFields = sprint
@@ -168,7 +170,22 @@ export function SprintDialog({
             </p>
           ) : null}
           <div className="task-form-actions">
-            <span />
+            {sprint?.status === 'planned' && onDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="dialog"
+                className="danger-button"
+                onClick={() => {
+                  close();
+                  onDelete(sprint);
+                }}
+              >
+                {t('sprint.actions.delete')}
+              </Button>
+            ) : (
+              <span />
+            )}
             <div>
               <Button
                 type="button"

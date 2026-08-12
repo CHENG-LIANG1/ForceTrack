@@ -33,6 +33,8 @@ const preferencesRepository: PreferencesRepository = {
   load: async (): Promise<UserPreferences> => ({
     locale: 'en-US',
     theme: 'light',
+    lastProjectId: null,
+    recentProjectIds: [],
   }),
   save: async () => undefined,
 };

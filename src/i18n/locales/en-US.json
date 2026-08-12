@@ -8,6 +8,9 @@
   },
   "preferences": {
     "settings": "Settings",
+    "userMenu": "Open user menu",
+    "localUser": "Local user",
+    "localMode": "Saved in this browser only",
     "description": "Adjust the interface language and visual theme.",
     "language": "Language",
     "languageDescription": "Choose the interface language.",
@@ -18,8 +21,138 @@
       "en-US": "English"
     },
     "themeOption": {
-      "light": "Vercel Light",
-      "dark": "Vercel Dark"
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "help": {
+    "title": "Help and shortcuts",
+    "description": "Switching projects changes the project context while keeping you on the same page.",
+    "newTask": "New task",
+    "search": "Search"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to ForceTrack",
+      "description": "Here is a quick tour of the workspace so you can start planning and tracking work with confidence."
+    },
+    "project": {
+      "title": "Keep work separated by project",
+      "description": "Switch projects here or open project management. Tasks, sprints, and members stay scoped to the selected project.",
+      "emptyDescription": "Once you create projects, use this switcher to move between them or open project management."
+    },
+    "emptyWorkspace": {
+      "title": "Create your first project",
+      "description": "Start here to create a focused workspace for its tasks, sprints, and members."
+    },
+    "navigation": {
+      "title": "Move through the delivery flow",
+      "description": "Use Summary, Backlog, Board, and Timeline to move from planning to day-to-day delivery and review."
+    },
+    "workspace": {
+      "title": "Work in the current view",
+      "description": "Each page starts with its purpose and primary actions. The content below always reflects the current project."
+    },
+    "tabs": {
+      "summary": {
+        "title": "Summary: understand project health",
+        "description": "Start here for a high-level view of progress, recent activity, priorities, work types, and team workload."
+      },
+      "summaryWorkspace": {
+        "title": "Focus the Summary",
+        "description": "Use the filters below this heading to narrow every metric and chart by date, assignee, work type, status, epic, or priority."
+      },
+      "backlog": {
+        "title": "Backlog: shape upcoming work",
+        "description": "Move here to capture, search, filter, and order work before it enters an active Sprint."
+      },
+      "backlogWorkspace": {
+        "title": "Plan Sprints deliberately",
+        "description": "Create planned Sprints, drag work between sections, set Sprint goals, and start the next delivery cycle from this view."
+      },
+      "board": {
+        "title": "Board: deliver the active Sprint",
+        "description": "The Board keeps the current Sprint visible and groups its work by delivery status."
+      },
+      "boardWorkspace": {
+        "title": "Keep status current",
+        "description": "Drag cards across To Do, In Progress, In Review, and Done so the team always shares the same delivery picture."
+      },
+      "timeline": {
+        "title": "Timeline: review the schedule",
+        "description": "Use the Timeline to see dated work across a shared calendar and spot scheduling pressure early."
+      },
+      "timelineWorkspace": {
+        "title": "Coordinate dates visually",
+        "description": "Adjust the visible range, review overdue or out-of-range work, and open unscheduled tasks that still need dates."
+      }
+    },
+    "help": {
+      "title": "Come back whenever you need",
+      "description": "Open Help and shortcuts to review keyboard shortcuts or replay this tour at any time."
+    },
+    "progress": "{{current}} of {{total}}",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Start using ForceTrack",
+    "skip": "Skip tour",
+    "replay": "Replay onboarding"
+  },
+  "project": {
+    "none": "No projects yet",
+    "empty": {
+      "title": "Create your first project",
+      "description": "Start a project to organize tasks, sprints, and members in one place.",
+      "action": "Create project"
+    },
+    "switcher": {
+      "label": "Switch project, currently {{project}}",
+      "projects": "Projects",
+      "search": "Search projects…",
+      "noResults": "No matching projects"
+    },
+    "create": {
+      "title": "Create project",
+      "description": "Create an independent space for tasks, sprints, and members.",
+      "action": "Create project",
+      "creating": "Creating…"
+    },
+    "manage": {
+      "title": "Project management",
+      "description": "Create, review, edit, or delete local projects.",
+      "action": "Project management",
+      "close": "Close project management",
+      "count": "{{count}} projects",
+      "create": "Create project",
+      "current": "Current project",
+      "open": "Open",
+      "edit": "Edit",
+      "editNamed": "Edit project {{name}}",
+      "editTitle": "Edit project",
+      "editDescription": "Update the project name and description.",
+      "save": "Save project",
+      "saving": "Saving…",
+      "delete": "Delete",
+      "deleteNamed": "Delete project {{name}}",
+      "deleteTitle": "Delete project?",
+      "deleteDescription": "This permanently deletes {{name}} with {{tasks}} tasks, {{sprints}} sprints, and {{members}} members. This cannot be undone.",
+      "deleteConfirmationLabel": "Type {{name}} to confirm",
+      "confirmDelete": "Delete permanently",
+      "project_not_found": "That project no longer exists.",
+      "deleteFailed": "The project could not be deleted. Try again.",
+      "noDescription": "No project description",
+      "stats": "{{tasks}} tasks · {{sprints}} sprints · {{members}} members"
+    },
+    "fields": {
+      "name": "Project name",
+      "description": "Description (optional)"
+    },
+    "validation": {
+      "name_required": "Enter a project name.",
+      "name_too_long": "Keep the project name to 80 characters or fewer.",
+      "description_too_long": "Keep the description to 500 characters or fewer.",
+      "unknown": "The project could not be created. Try again."
     }
   },
   "board": {
@@ -55,6 +188,8 @@
       "save": "Save task",
       "saving": "Saving…",
       "clearDate": "Clear date",
+      "decreaseStoryPoints": "Decrease story points",
+      "increaseStoryPoints": "Increase story points",
       "cancel": "Cancel",
       "close": "Close task editor",
       "delete": "Delete task",
@@ -250,6 +385,7 @@
     "actions": {
       "create": "Create sprint",
       "save": "Save sprint",
+      "delete": "Delete sprint",
       "editLabel": "Edit {{name}}",
       "deleteLabel": "Delete {{name}}",
       "start": "Start sprint",
@@ -271,6 +407,21 @@
     }
   },
   "member": {
+    "manage": "Manage members",
+    "title": "Project members",
+    "description": "Manage people who can be assigned work in this project. Members are stored locally; no invitation email is sent.",
+    "emptyTitle": "No project members yet",
+    "emptyDescription": "Add a member to make them available for task assignment.",
+    "removeLastOwner": "A project must keep at least one owner.",
+    "removeReferenced": "Reassign tasks owned or reported by this member first.",
+    "removeTitle": "Remove project member?",
+    "removeDescription": "{{name}} will no longer be available for new task assignments in this project.",
+    "last_owner": "The last project owner cannot be removed.",
+    "member_has_tasks": "Reassign this member's tasks before removing them.",
+    "removeFailed": "The member could not be removed.",
+    "columns": { "person": "Member", "role": "Role", "status": "Status" },
+    "role": { "owner": "Owner", "member": "Member" },
+    "status": { "joined": "Joined", "pending": "Pending" },
     "createTitle": "Add member",
     "createDescription": "New members can immediately be selected as assignee or reporter.",
     "formTitle": "New member",
@@ -286,7 +437,10 @@
     },
     "actions": {
       "add": "Add member",
-      "close": "Close member dialog"
+      "close": "Close member dialog",
+      "remove": "Remove member",
+      "removeNamed": "Remove {{name}}",
+      "confirmRemove": "Remove member"
     },
     "validation": {
       "name_required": "Enter a name.",
@@ -313,6 +467,7 @@
     "noScheduled": "No dated work items. Use the unscheduled list below."
   },
   "a11y": {
+    "skipToContent": "Skip to main content",
     "forceTrackHome": "ForceTrack board",
     "preferenceControls": "Language and theme preferences"
   },

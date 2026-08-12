@@ -67,10 +67,11 @@ export function createTaskAction(
   snapshot: TaskSnapshotV2,
   input: CreateTaskInput,
   dependencies: DomainDependencies,
+  projectKey?: string,
 ): TaskAction {
   return {
     type: 'task/created',
-    payload: createTask(snapshot, input, dependencies),
+    payload: createTask(snapshot, input, dependencies, projectKey),
   };
 }
 

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 
-import { ACTIVE_SPRINT_ID, type TaskStatus } from '@/domain/task';
+import type { TaskStatus } from '@/domain/task';
 
 export interface TaskEditorState {
   open: boolean;
@@ -13,7 +13,7 @@ const INITIAL_EDITOR: TaskEditorState = {
   open: false,
   taskId: null,
   createStatus: 'todo',
-  createSprintId: ACTIVE_SPRINT_ID,
+  createSprintId: null,
 };
 
 /** Keeps dialog entry-point defaults and focus restoration consistent across views. */
@@ -24,7 +24,7 @@ export function useTaskEditor() {
   const openCreate = (
     trigger: HTMLElement,
     status: TaskStatus = 'todo',
-    sprintId: string | null = ACTIVE_SPRINT_ID,
+    sprintId: string | null = null,
   ) => {
     triggerRef.current = trigger;
     setEditor({
