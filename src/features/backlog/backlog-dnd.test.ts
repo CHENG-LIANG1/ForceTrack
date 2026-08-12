@@ -4,6 +4,7 @@ import {
   backlogSectionId,
   createBacklogKeyboardCoordinates,
   resolveBacklogDropTarget,
+  resolveBacklogMoveTarget,
 } from '@/features/backlog/backlog-dnd';
 import { makeTask } from '@/test/fixtures';
 
@@ -38,5 +39,45 @@ describe('backlog drag targets', () => {
     expect(createBacklogKeyboardCoordinates(['sprint-1', null])).toBeTypeOf(
       'function',
     );
+  });
+
+  it('keeps the original target index when sorting downward in one section', () => {
+    const ordered = [
+      makeTask({ id: 'first', rank: 0 }),
+      makeTask({ id: 'middle', key: 'FT-2', rank: 1 }),
+      makeTask({ id: 'last', key: 'FT-3', rank: 2 }),
+    ];
+
+    expect(resolveBacklogMoveTarget(ordered, 'first', 'last')).toEqual({
+      sprintId: 'sprint-1',
+      toIndex: 2,
+    });
+  });
+
+  it('uses full unfiltered order for cross-section and empty-section drops', () => {
+    const hiddenTarget = makeTask({
+      id: 'hidden-target',
+      key: 'FT-3',
+      sprintId: 'sprint-2',
+      rank: 0,
+    });
+    const visibleTarget = makeTask({
+      id: 'visible-target',
+      key: 'FT-4',
+      sprintId: 'sprint-2',
+      rank: 1,
+    });
+    const allTasks = [...tasks, hiddenTarget, visibleTarget];
+
+    expect(
+      resolveBacklogMoveTarget(allTasks, backlogTask.id, visibleTarget.id),
+    ).toEqual({ sprintId: 'sprint-2', toIndex: 1 });
+    expect(
+      resolveBacklogMoveTarget(
+        allTasks,
+        backlogTask.id,
+        backlogSectionId('empty-sprint'),
+      ),
+    ).toEqual({ sprintId: 'empty-sprint', toIndex: 0 });
   });
 });

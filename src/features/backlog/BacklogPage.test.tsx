@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from '@/app/App';
@@ -54,6 +60,8 @@ function renderBacklog(
 }
 
 describe('Backlog planning', () => {
+  afterEach(() => cleanup());
+
   it('creates a planned sprint and persists it as a backlog section', async () => {
     const user = userEvent.setup();
     const repository = renderBacklog(['new-sprint']);
@@ -109,8 +117,7 @@ describe('Backlog planning', () => {
     });
   });
 
-  it('requires dates before starting a planned sprint', async () => {
-    const user = userEvent.setup();
+  it('disables starting an empty planned sprint', async () => {
     const planned = {
       ...makeSnapshot().sprints[0],
       id: 'sprint-2',
@@ -119,25 +126,61 @@ describe('Backlog planning', () => {
       endDate: null,
       status: 'planned' as const,
     };
+    renderBacklog([], makeSnapshot({ tasks: [], sprints: [planned] }));
+
+    expect(
+      await screen.findByRole('button', { name: 'Start sprint' }),
+    ).toBeDisabled();
+  });
+
+  it('starts a populated sprint with editable details and default dates', async () => {
+    const user = userEvent.setup();
+    const base = makeSnapshot();
+    const planned = {
+      ...base.sprints[0],
+      id: 'sprint-2',
+      name: 'Sprint 2',
+      goal: '',
+      startDate: null,
+      endDate: null,
+      status: 'planned' as const,
+      startedAt: null,
+    };
     const repository = renderBacklog(
       [],
-      makeSnapshot({ tasks: [], sprints: [planned] }),
+      makeSnapshot({
+        tasks: [
+          {
+            ...base.tasks[0],
+            sprintId: planned.id,
+          },
+        ],
+        sprints: [planned],
+      }),
     );
 
     await user.click(
       await screen.findByRole('button', { name: 'Start sprint' }),
     );
     const dialog = screen.getByRole('dialog', { name: 'Start sprint' });
+    await user.clear(within(dialog).getByLabelText(/Sprint name/));
+    await user.type(within(dialog).getByLabelText(/Sprint name/), 'Launch');
+    await user.type(within(dialog).getByLabelText('Sprint goal'), 'Ship it');
     await user.click(
       within(dialog).getByRole('button', { name: 'Start sprint' }),
     );
 
-    expect(
-      within(dialog).getByText(
-        'Choose both a start date and an end date before starting the sprint.',
-      ),
-    ).toBeInTheDocument();
-    expect(repository.saves).toHaveLength(0);
+    await waitFor(() => expect(repository.saves).toHaveLength(1));
+    expect(repository.saves[0].sprints[0]).toMatchObject({
+      name: 'Launch',
+      goal: 'Ship it',
+      status: 'active',
+    });
+    expect(repository.saves[0].sprints[0].startDate).not.toBeNull();
+    expect(repository.saves[0].sprints[0].endDate).not.toBeNull();
+    expect(window.location.pathname).toBe('/board');
+    expect(screen.getByText('Launch')).toBeVisible();
+    expect(screen.getByText('Ship it')).toBeVisible();
   });
 
   it('completes an active sprint and persists its lifecycle state', async () => {

@@ -1,9 +1,12 @@
 import { X } from 'lucide-react';
+import { addDays, format } from 'date-fns';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogClose,
@@ -26,11 +29,6 @@ interface StartSprintDialogProps {
   onSave(sprintId: string, fields: SprintStartFields): Promise<void>;
 }
 
-const EMPTY_DATES: SprintStartFields = {
-  startDate: null,
-  endDate: null,
-};
-
 export function StartSprintDialog({
   open,
   sprint,
@@ -38,9 +36,14 @@ export function StartSprintDialog({
   onSave,
 }: StartSprintDialogProps) {
   const { t, i18n } = useTranslation();
+  const defaultStartDate = format(new Date(), 'yyyy-MM-dd');
   const [draft, setDraft] = useState<SprintStartFields>({
-    startDate: sprint?.startDate ?? EMPTY_DATES.startDate,
-    endDate: sprint?.endDate ?? EMPTY_DATES.endDate,
+    name: sprint?.name ?? '',
+    goal: sprint?.goal ?? '',
+    startDate: sprint?.startDate ?? defaultStartDate,
+    endDate:
+      sprint?.endDate ??
+      format(addDays(new Date(defaultStartDate), 13), 'yyyy-MM-dd'),
   });
   const [error, setError] = useState<SprintLifecycleIssue | null>(null);
   const [saving, setSaving] = useState(false);
@@ -100,6 +103,40 @@ export function StartSprintDialog({
               .finally(() => setSaving(false));
           }}
         >
+          <div className="form-field form-field-wide">
+            <label htmlFor="sprint-start-name">
+              {t('sprint.fields.name')} *
+            </label>
+            <Input
+              id="sprint-start-name"
+              autoFocus
+              value={draft.name}
+              maxLength={81}
+              onChange={(event) => {
+                setDraft((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }));
+                setError(null);
+              }}
+            />
+          </div>
+          <div className="form-field form-field-wide">
+            <label htmlFor="sprint-start-goal">{t('sprint.fields.goal')}</label>
+            <Textarea
+              id="sprint-start-goal"
+              value={draft.goal}
+              maxLength={501}
+              rows={3}
+              onChange={(event) => {
+                setDraft((current) => ({
+                  ...current,
+                  goal: event.target.value,
+                }));
+                setError(null);
+              }}
+            />
+          </div>
           <div className="task-form-grid">
             <div className="form-field">
               <label htmlFor="sprint-start-required">

@@ -29,6 +29,14 @@
     "columnsLabel": "Task status columns",
     "columnCount": "{{status}}, {{count}} tasks",
     "emptyColumn": "No tasks in this stage.",
+    "activeSprint": "Active sprint",
+    "noGoal": "No sprint goal",
+    "daysRemaining_one": "{{count}} day remaining",
+    "daysRemaining_other": "{{count}} days remaining",
+    "daysRemaining": "{{count}} days remaining",
+    "noSprintTitle": "No active sprint",
+    "noSprintDescription": "Plan work in the Backlog and start a sprint to make it available on the Board.",
+    "openBacklog": "Open Backlog",
     "addTask": "Add task",
     "createInColumn": "Create task in {{status}}",
     "dnd": {
@@ -164,11 +172,26 @@
     "activeSprintHint": "Work currently visible on the Board",
     "backlogHint": "Work not yet committed to a sprint",
     "plannedSprintHint": "A planned sprint that has not started",
+    "noSprintGoal": "No sprint goal",
+    "schedule": {
+      "range": "{{start}} – {{end}}",
+      "starts": "Starts {{date}}",
+      "ends": "Ends {{date}}",
+      "unscheduled": "Dates not set"
+    },
     "itemCount": "{{count}} work items",
+    "pointCount": "{{count}} points",
+    "assignees": "Assigned members",
     "search": "Search summary or key",
     "add": "Add work item",
     "emptySprint": "No work is planned for the active sprint.",
     "emptyBacklog": "Your backlog is clear.",
+    "filters": {
+      "allAssignees": "All assignees",
+      "allTypes": "All work types",
+      "allStatuses": "All statuses",
+      "allPriorities": "All priorities"
+    },
     "dnd": {
       "instructions": "To pick up a work item, press Space. Use the arrow keys to choose a sprint or the backlog, then press Space to drop, or Escape to cancel.",
       "pickedUp": "Picked up {{title}}.",
@@ -178,23 +201,38 @@
     }
   },
   "sprint": {
+    "status": {
+      "planned": "Planned",
+      "active": "Active",
+      "completed": "Completed"
+    },
     "createTitle": "Create sprint",
     "createDescription": "Create a planning container, then schedule work from the backlog.",
+    "editTitle": "Edit sprint",
+    "editDescription": "Update the sprint name, goal, or schedule.",
     "startTitle": "Start sprint",
-    "startDescription": "Confirm the schedule before starting {{name}}.",
+    "startDescription": "Confirm the details and schedule before starting {{name}}.",
     "completeTitle": "Complete sprint",
-    "completeDescription": "Complete {{name}}? {{count}} incomplete work items will return to the Backlog.",
+    "completeDescription": "Complete {{name}}? Choose where to move {{count}} incomplete work items.",
+    "deleteTitle": "Delete sprint",
+    "deleteDescription": "Delete {{name}}? Its work items will move to {{target}}.",
+    "selectTarget": "Choose a destination",
     "fields": {
       "name": "Sprint name",
       "goal": "Sprint goal",
       "startDate": "Start date",
-      "endDate": "End date"
+      "endDate": "End date",
+      "incompleteTarget": "Move incomplete work to"
     },
     "actions": {
       "create": "Create sprint",
+      "save": "Save sprint",
+      "editLabel": "Edit {{name}}",
+      "deleteLabel": "Delete {{name}}",
       "start": "Start sprint",
       "complete": "Complete sprint",
-      "confirmComplete": "Complete"
+      "confirmComplete": "Complete",
+      "confirmDelete": "Delete sprint"
     },
     "validation": {
       "name_required": "Enter a sprint name.",

@@ -41,11 +41,18 @@ describe('sprint lifecycle', () => {
   });
 
   it('requires both dates and a valid range when starting', () => {
-    expect(validateSprintStartFields({ startDate: null, endDate: null })).toBe(
-      'dates_required',
-    );
     expect(
       validateSprintStartFields({
+        name: plannedSprint.name,
+        goal: plannedSprint.goal,
+        startDate: null,
+        endDate: null,
+      }),
+    ).toBe('dates_required');
+    expect(
+      validateSprintStartFields({
+        name: plannedSprint.name,
+        goal: plannedSprint.goal,
         startDate: '2026-08-20',
         endDate: '2026-08-19',
       }),
@@ -56,13 +63,20 @@ describe('sprint lifecycle', () => {
     expect(
       startSprint(
         plannedSprint,
-        { startDate: '2026-08-12', endDate: '2026-08-25' },
+        {
+          name: 'Renamed during start',
+          goal: 'Ship the lifecycle',
+          startDate: '2026-08-12',
+          endDate: '2026-08-25',
+        },
         [plannedSprint],
         1,
         FIXED_NOW,
       ),
     ).toMatchObject({
       status: 'active',
+      name: 'Renamed during start',
+      goal: 'Ship the lifecycle',
       startDate: '2026-08-12',
       endDate: '2026-08-25',
       startedAt: FIXED_NOW,
@@ -78,7 +92,12 @@ describe('sprint lifecycle', () => {
     expect(() =>
       startSprint(
         plannedSprint,
-        { startDate: '2026-08-12', endDate: '2026-08-25' },
+        {
+          name: plannedSprint.name,
+          goal: plannedSprint.goal,
+          startDate: '2026-08-12',
+          endDate: '2026-08-25',
+        },
         [active, plannedSprint],
       ),
     ).toThrowError(new SprintLifecycleError('active_exists'));
@@ -97,7 +116,12 @@ describe('sprint lifecycle', () => {
     expect(() =>
       startSprint(
         plannedSprint,
-        { startDate: '2026-08-12', endDate: '2026-08-25' },
+        {
+          name: plannedSprint.name,
+          goal: plannedSprint.goal,
+          startDate: '2026-08-12',
+          endDate: '2026-08-25',
+        },
         [plannedSprint],
         0,
         FIXED_NOW,
