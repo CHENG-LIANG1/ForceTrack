@@ -8,6 +8,7 @@ import {
   useSensors,
   type Announcements,
   type DragEndEvent,
+  type DragMoveEvent,
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -32,8 +33,12 @@ import {
 } from '@/features/board/board-selectors';
 import {
   boardKeyboardCoordinates,
+  insertionIndexFromCardMidpoints,
+  normalizeBoardDropIndex,
   orderedTasksForStatus,
   resolveBoardDropTarget,
+  type BoardDropEdge,
+  type BoardDropTarget,
 } from '@/features/board/board-dnd';
 import { TaskCardOverlay } from '@/features/board/TaskCard';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
@@ -42,6 +47,62 @@ interface EditorState {
   open: boolean;
   taskId: string | null;
   createStatus: TaskStatus;
+}
+
+function pointerYFromEvent(
+  event: Pick<DragOverEvent, 'active' | 'activatorEvent' | 'delta'>,
+): number {
+  const activatorEvent = event.activatorEvent;
+  if (
+    'clientY' in activatorEvent &&
+    typeof activatorEvent.clientY === 'number'
+  ) {
+    return activatorEvent.clientY + event.delta.y;
+  }
+  if ('touches' in activatorEvent) {
+    const touchEvent = activatorEvent as TouchEvent;
+    const touch = touchEvent.touches[0] ?? touchEvent.changedTouches[0];
+    if (touch) return touch.clientY + event.delta.y;
+  }
+
+  const activeRect = event.active.rect.current.translated;
+  return activeRect ? activeRect.top + activeRect.height / 2 : 0;
+}
+
+/** Uses the pointer rather than the overlay center so a card can cross gaps naturally. */
+function dropEdgeFromEvent(
+  event: Pick<DragOverEvent, 'active' | 'activatorEvent' | 'delta' | 'over'>,
+): BoardDropEdge {
+  if (!event.over) return 'before';
+
+  const targetCenter = event.over.rect.top + event.over.rect.height / 2;
+  return pointerYFromEvent(event) > targetCenter ? 'after' : 'before';
+}
+
+/** Measures fixed card midpoints so the placeholder never becomes a drag dead zone. */
+function previewTargetFromPointer(
+  status: TaskStatus,
+  event: Pick<DragOverEvent, 'active' | 'activatorEvent' | 'delta'>,
+): BoardDropTarget | null {
+  const column = document.querySelector<HTMLElement>(
+    `[data-testid="board-column-${status}"]`,
+  );
+  if (!column) return null;
+
+  const cardMidpoints = Array.from(
+    column.querySelectorAll<HTMLElement>('.task-card-slot'),
+    (card) => {
+      const rect = card.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    },
+  );
+  return {
+    status,
+    index: insertionIndexFromCardMidpoints(
+      cardMidpoints,
+      pointerYFromEvent(event),
+    ),
+  };
 }
 
 export function BoardPage() {
@@ -65,6 +126,9 @@ export function BoardPage() {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [overStatus, setOverStatus] = useState<TaskStatus | null>(null);
+  const [dropPreview, setDropPreview] = useState<BoardDropTarget | null>(null);
+  const [activeCardHeight, setActiveCardHeight] = useState<number | null>(null);
+  const dropPreviewRef = useRef<BoardDropTarget | null>(null);
   const editorTriggerRef = useRef<HTMLElement | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -158,18 +222,41 @@ export function BoardPage() {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     setActiveTaskId(String(active.id));
+    setActiveCardHeight(active.rect.current.initial?.height ?? null);
   };
 
-  const handleDragOver = ({ over }: DragOverEvent) => {
-    setOverStatus(targetStatus(over ? String(over.id) : null));
+  const handleDragMove = (event: DragMoveEvent) => {
+    const { active, over } = event;
+    const movingTask = snapshot?.tasks.find(
+      (task) => task.id === String(active.id),
+    );
+    const target = over
+      ? resolveBoardDropTarget(
+          boardTasks,
+          String(over.id),
+          dropEdgeFromEvent(event),
+        )
+      : null;
+    const nextPreview =
+      target && movingTask?.status !== target.status
+        ? (previewTargetFromPointer(target.status, event) ?? target)
+        : null;
+
+    setOverStatus(target?.status ?? null);
+    dropPreviewRef.current = nextPreview;
+    setDropPreview(nextPreview);
   };
 
   const resetDragState = () => {
     setActiveTaskId(null);
+    setActiveCardHeight(null);
     setOverStatus(null);
+    dropPreviewRef.current = null;
+    setDropPreview(null);
   };
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     if (!snapshot || !over) {
       resetDragState();
       return;
@@ -177,11 +264,20 @@ export function BoardPage() {
 
     const taskId = String(active.id);
     const movingTask = snapshot.tasks.find((task) => task.id === taskId);
-    const target = resolveBoardDropTarget(boardTasks, String(over.id));
-    if (!movingTask || !target) {
+    const resolvedTarget = resolveBoardDropTarget(
+      boardTasks,
+      String(over.id),
+      dropEdgeFromEvent(event),
+    );
+    if (!movingTask || !resolvedTarget) {
       resetDragState();
       return;
     }
+    const target =
+      movingTask.status !== resolvedTarget.status &&
+      dropPreviewRef.current?.status === resolvedTarget.status
+        ? dropPreviewRef.current
+        : resolvedTarget;
 
     const targetLength = orderedTasksForStatus(
       boardTasks,
@@ -189,7 +285,8 @@ export function BoardPage() {
     ).length;
     const maximumIndex =
       targetLength - (movingTask.status === target.status ? 1 : 0);
-    const effectiveIndex = Math.min(target.index, Math.max(0, maximumIndex));
+    const normalizedIndex = normalizeBoardDropIndex(boardTasks, taskId, target);
+    const effectiveIndex = Math.min(normalizedIndex, Math.max(0, maximumIndex));
     const positionChanged =
       movingTask.status !== target.status ||
       movingTask.position !== effectiveIndex;
@@ -213,17 +310,17 @@ export function BoardPage() {
             <>
               <Button
                 variant="outline"
-                size="lg"
+                size="page"
                 onClick={() => setCompleteDialogOpen(true)}
               >
                 {t('sprint.actions.complete')}
               </Button>
               <Button
-                size="lg"
+                size="page"
                 onClick={(event) => openCreate('todo', event.currentTarget)}
                 disabled={!isReady}
               >
-                <Plus size={16} />
+                <Plus size={14} aria-hidden="true" />
                 {t('task.actions.create')}
               </Button>
             </>
@@ -279,7 +376,7 @@ export function BoardPage() {
               },
             }}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
             onDragCancel={resetDragState}
           >
@@ -292,6 +389,10 @@ export function BoardPage() {
                     tasks={orderedTasksForStatus(boardTasks, status)}
                     members={snapshot.members}
                     isDropTarget={overStatus === status}
+                    dropPreviewIndex={
+                      dropPreview?.status === status ? dropPreview.index : null
+                    }
+                    dropPreviewHeight={activeCardHeight}
                     onCreate={openCreate}
                     onOpenTask={openTask}
                   />

@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router';
 
 import { usePreferences } from '@/app/preferences-context';
 import { useProjects } from '@/app/project-context';
-import { pageFromPath, projectPath, projectRoutes } from '@/app/route-paths';
+import { pageFromPath, projectPath } from '@/app/route-paths';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MenuItem } from '@/components/ui/menu-item';
@@ -14,17 +14,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { MemberManagementDialog } from '@/features/members/MemberManagementDialog';
 import { ProjectManagementDialog } from '@/features/projects/ProjectManagementDialog';
 
 /** Makes project context visible at all times and keeps project actions in one predictable place. */
 export function ProjectSwitcher() {
   const { t } = useTranslation();
-  const { projects, currentProject } = useProjects();
+  const { projects, currentProject, addMember, removeMember } = useProjects();
   const { preferences } = usePreferences();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [managementOpen, setManagementOpen] = useState(false);
+  const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [query, setQuery] = useState('');
   const sortedProjects = useMemo(() => {
     const recentOrder = new Map(
@@ -164,7 +166,7 @@ export function ProjectSwitcher() {
               onClick={() => {
                 if (!currentProject) return;
                 setOpen(false);
-                navigate(projectRoutes.members(currentProject.id));
+                setMemberManagementOpen(true);
               }}
             >
               {t('member.manage')}
@@ -182,6 +184,14 @@ export function ProjectSwitcher() {
               : '/',
           );
         }}
+      />
+      <MemberManagementDialog
+        open={memberManagementOpen}
+        members={currentProject?.members ?? []}
+        tasks={currentProject?.tasks ?? []}
+        onOpenChange={setMemberManagementOpen}
+        onAdd={addMember}
+        onRemove={removeMember}
       />
     </>
   );

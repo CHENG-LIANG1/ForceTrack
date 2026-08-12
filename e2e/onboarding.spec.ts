@@ -18,7 +18,9 @@ test('keeps help and tour buttons compact while the overlay locks scrolling', as
   await page.evaluate(() => window.scrollTo(0, 280));
   const initialScroll = await page.evaluate(() => window.scrollY);
 
-  await page.getByRole('button', { name: 'Help and shortcuts' }).click();
+  await page.getByRole('button', { name: 'Help' }).click();
+  await expect(page.getByText('Plan work', { exact: true })).toBeVisible();
+  await expect(page.locator('.help-popover kbd')).toHaveCount(0);
   const replayButton = page.getByRole('button', { name: 'Replay onboarding' });
   await expect(replayButton).toHaveCSS('font-size', '12px');
   await expect(replayButton).toHaveCSS('min-height', '36px');

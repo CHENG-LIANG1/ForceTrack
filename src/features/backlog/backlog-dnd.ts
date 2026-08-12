@@ -9,6 +9,8 @@ export interface BacklogDropTarget {
   sprintId: string | null;
 }
 
+export type BacklogDropEdge = 'before' | 'after';
+
 export interface BacklogMoveTarget extends BacklogDropTarget {
   toIndex: number;
 }
@@ -80,6 +82,7 @@ export function resolveBacklogMoveTarget(
   tasks: readonly Task[],
   movingTaskId: string,
   overId: string,
+  edge: BacklogDropEdge = 'before',
 ): BacklogMoveTarget | null {
   const movingTask = tasks.find((task) => task.id === movingTaskId);
   const target = resolveBacklogDropTarget(tasks, overId);
@@ -91,7 +94,10 @@ export function resolveBacklogMoveTarget(
       (left, right) =>
         left.rank - right.rank || left.id.localeCompare(right.id),
     );
-  const overTaskIndex = orderedTargetTasks.findIndex(
+  const targetTasksWithoutMoving = orderedTargetTasks.filter(
+    (task) => task.id !== movingTask.id,
+  );
+  const overTaskIndex = targetTasksWithoutMoving.findIndex(
     (task) => task.id === overId,
   );
 
@@ -99,7 +105,7 @@ export function resolveBacklogMoveTarget(
     sprintId: target.sprintId,
     toIndex:
       overTaskIndex >= 0
-        ? overTaskIndex
-        : orderedTargetTasks.filter((task) => task.id !== movingTask.id).length,
+        ? overTaskIndex + (edge === 'after' ? 1 : 0)
+        : targetTasksWithoutMoving.length,
   };
 }

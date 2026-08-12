@@ -48,9 +48,9 @@ test('combines search, priority, assignee, type, and status filters with clear r
   await page.getByRole('option', { name: 'Lin Chen' }).click();
   await page.getByRole('combobox', { name: 'Work type' }).click();
   await page.getByRole('option', { name: 'Story' }).click();
-  await page.getByRole('combobox', { name: 'Status' }).click();
+  await page.getByRole('combobox', { name: 'Status', exact: true }).click();
   await page.getByRole('option', { name: 'To Do' }).click();
-  await page.getByRole('combobox', { name: 'Priority' }).click();
+  await page.getByRole('combobox', { name: 'Priority', exact: true }).click();
   await page.getByRole('option', { name: 'High priority' }).click();
 
   await expect(matchingTask).toBeVisible();
@@ -69,7 +69,7 @@ test('combines search, priority, assignee, type, and status filters with clear r
     ['Status', 'All statuses'],
     ['Priority', 'All priorities'],
   ] as const) {
-    await page.getByRole('combobox', { name: label }).click();
+    await page.getByRole('combobox', { name: label, exact: true }).click();
     await page.getByRole('option', { name: option }).click();
   }
   await expect(page.getByTestId('backlog-item-FT-1')).toBeVisible();

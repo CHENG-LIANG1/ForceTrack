@@ -1,11 +1,4 @@
-import {
-  Check,
-  ChevronDown,
-  CircleHelp,
-  Laptop,
-  Moon,
-  Sun,
-} from 'lucide-react';
+import { Check, ChevronDown, CircleHelp, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
@@ -21,10 +14,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { THEME_PREFERENCES, SUPPORTED_LOCALES } from '@/domain/member';
+import { UserAvatar } from '@/components/UserAvatar';
+import {
+  SELECTABLE_THEME_PREFERENCES,
+  SUPPORTED_LOCALES,
+} from '@/domain/member';
 import { ProjectSwitcher } from '@/features/projects/ProjectSwitcher';
 
-const themeIcons = { system: Laptop, light: Sun, dark: Moon } as const;
+const themeIcons = { light: Sun, dark: Moon } as const;
 
 /** Maintains geometric navigation centering while separating project and user concerns. */
 export function AppHeader() {
@@ -35,6 +32,10 @@ export function AppHeader() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const projectId = currentProject?.id;
+  const localMember =
+    currentProject?.members.find((member) => member.role === 'owner') ??
+    currentProject?.members[0] ??
+    null;
 
   return (
     <header className="site-header">
@@ -81,20 +82,21 @@ export function AppHeader() {
           >
             <h2>{t('help.title')}</h2>
             <p>{t('help.description')}</p>
-            <dl>
-              <div>
-                <dt>{t('help.newTask')}</dt>
-                <dd>
-                  <kbd>N</kbd>
-                </dd>
-              </div>
-              <div>
-                <dt>{t('help.search')}</dt>
-                <dd>
-                  <kbd>/</kbd>
-                </dd>
-              </div>
-            </dl>
+            <ol className="help-guide">
+              {(['plan', 'deliver', 'review'] as const).map(
+                (section, index) => (
+                  <li key={section}>
+                    <span className="help-guide-step" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <strong>{t(`help.sections.${section}.title`)}</strong>
+                      <p>{t(`help.sections.${section}.description`)}</p>
+                    </div>
+                  </li>
+                ),
+              )}
+            </ol>
             <Button
               variant="outline"
               size="dialog"
@@ -117,9 +119,12 @@ export function AppHeader() {
               className="user-menu-trigger"
               aria-label={t('preferences.userMenu')}
             >
-              <span className="user-avatar" aria-hidden="true">
-                LU
-              </span>
+              <UserAvatar
+                member={localMember}
+                className="user-avatar"
+                fallback="LU"
+                fallbackLabel={t('preferences.localUser')}
+              />
               <ChevronDown
                 className="user-menu-chevron"
                 size={14}
@@ -133,13 +138,13 @@ export function AppHeader() {
             sideOffset={8}
           >
             <div className="local-identity">
-              <strong>{t('preferences.localUser')}</strong>
-              <small>{t('preferences.localMode')}</small>
+              <strong>{localMember?.name ?? t('preferences.localUser')}</strong>
+              <small>{localMember?.email ?? t('preferences.localMode')}</small>
             </div>
             <section className="user-menu-section">
               <h2>{t('preferences.theme')}</h2>
               <div className="menu-option-list">
-                {THEME_PREFERENCES.map((theme) => {
+                {SELECTABLE_THEME_PREFERENCES.map((theme) => {
                   const Icon = themeIcons[theme];
                   return (
                     <MenuItem

@@ -4,6 +4,7 @@ import type { ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
+// Semantic sizes keep page actions compact without weakening mobile touch targets.
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 rounded-md text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
@@ -15,9 +16,9 @@ const buttonVariants = cva(
         unstyled: '',
       },
       size: {
-        default: 'h-9 px-4 py-2',
+        default: 'h-9 px-3.5 py-2',
         dialog: 'h-9 min-w-[88px] rounded-lg px-3 text-xs',
-        lg: 'h-11 px-5 text-[13px]',
+        page: 'h-9 gap-1.5 px-3.5 text-xs',
       },
     },
     defaultVariants: {
@@ -50,5 +51,5 @@ export function Button({
         )
       : cn(buttonVariants({ variant, size, className }));
 
-  return <Comp className={resolvedClassName} {...props} />;
+  return <Comp data-slot="button" className={resolvedClassName} {...props} />;
 }

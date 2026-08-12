@@ -3,7 +3,6 @@ export const PROJECT_PAGES = [
   'backlog',
   'board',
   'timeline',
-  'members',
 ] as const;
 export type ProjectPage = (typeof PROJECT_PAGES)[number];
 
@@ -17,8 +16,6 @@ export const projectRoutes = {
     `/projects/${encodeURIComponent(projectId)}/board`,
   timeline: (projectId: string) =>
     `/projects/${encodeURIComponent(projectId)}/timeline`,
-  members: (projectId: string) =>
-    `/projects/${encodeURIComponent(projectId)}/members`,
 } as const;
 
 export const legacyRoutes = {

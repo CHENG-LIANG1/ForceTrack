@@ -18,6 +18,11 @@ interface DatePickerProps {
   locale: string;
   placeholder: string;
   clearLabel: string;
+  ariaLabel?: string;
+  className?: string;
+  minDate?: string | null;
+  compact?: boolean;
+  disabled?: boolean;
   invalid?: boolean;
   describedBy?: string;
   onChange(value: string | null): void;
@@ -41,9 +46,13 @@ function serializeCalendarDate(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatDisplayDate(value: Date, locale: string): string {
+function formatDisplayDate(
+  value: Date,
+  locale: string,
+  compact: boolean,
+): string {
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
+    year: compact ? undefined : 'numeric',
     month: 'short',
     day: 'numeric',
   }).format(value);
@@ -57,11 +66,17 @@ export function DatePicker({
   locale,
   placeholder,
   clearLabel,
+  ariaLabel,
+  className,
+  minDate = null,
+  compact = false,
+  disabled = false,
   invalid = false,
   describedBy,
   onChange,
 }: DatePickerProps) {
   const selected = parseCalendarDate(value);
+  const earliestDate = parseCalendarDate(minDate);
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(selected ?? new Date());
 
@@ -79,15 +94,20 @@ export function DatePicker({
           className={cn(
             'ui-date-trigger',
             !selected && 'ui-control-placeholder',
+            className,
           )}
           id={id}
           name={name}
           type="button"
           aria-invalid={invalid}
           aria-describedby={describedBy}
+          aria-label={ariaLabel}
+          disabled={disabled}
         >
           <span>
-            {selected ? formatDisplayDate(selected, locale) : placeholder}
+            {selected
+              ? formatDisplayDate(selected, locale, compact)
+              : placeholder}
           </span>
           <CalendarDays size={16} aria-hidden="true" />
         </Button>
@@ -103,6 +123,7 @@ export function DatePicker({
           month={month}
           onMonthChange={setMonth}
           selected={selected}
+          disabled={earliestDate ? { before: earliestDate } : undefined}
           locale={locale.startsWith('zh') ? zhCN : enUS}
           onSelect={(date) => {
             if (!date) return;

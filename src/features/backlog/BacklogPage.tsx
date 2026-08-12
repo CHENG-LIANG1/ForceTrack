@@ -3,11 +3,13 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  pointerWithin,
   PointerSensor,
   useDroppable,
   useSensor,
   useSensors,
   type Announcements,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -27,6 +29,7 @@ import { useProjects } from '@/app/project-context';
 import { projectRoutes } from '@/app/route-paths';
 import { LoadingState } from '@/components/LoadingState';
 import { PageHeader } from '@/components/PageHeader';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,7 +45,9 @@ import {
   TASK_PRIORITIES,
   TASK_STATUSES,
   TASK_TYPES,
+  taskToFields,
   type Task,
+  type TaskFields,
   type TaskPriority,
   type TaskStatus,
   type TaskType,
@@ -50,9 +55,11 @@ import {
 import {
   backlogSectionId,
   createBacklogKeyboardCoordinates,
+  type BacklogDropEdge,
   resolveBacklogDropTarget,
   resolveBacklogMoveTarget,
 } from '@/features/backlog/backlog-dnd';
+import { BacklogItemQuickFields } from '@/features/backlog/BacklogItemQuickFields';
 import {
   selectPlanningSprints,
   selectTasksForPlanningSection,
@@ -77,9 +84,14 @@ interface BacklogSectionProps {
   members: readonly Member[];
   sprint: Sprint | null;
   isDropTarget: boolean;
+  rowDropTarget: { taskId: string; edge: BacklogDropEdge } | null;
   activeSprintExists: boolean;
   onCreate(trigger: HTMLElement): void;
   onOpenTask(taskId: string, trigger: HTMLElement): void;
+  onQuickUpdate(
+    task: Task,
+    patch: Partial<Pick<TaskFields, 'status' | 'dueDate' | 'priority'>>,
+  ): Promise<void>;
   onStartSprint(sprint: Sprint): void;
   onCompleteSprint(sprint: Sprint): void;
   onEditSprint(sprint: Sprint): void;
@@ -88,7 +100,28 @@ interface BacklogSectionProps {
 interface BacklogItemProps {
   task: Task;
   member: Member | null;
+  dropEdge: BacklogDropEdge | null;
   onOpenTask(taskId: string, trigger: HTMLElement): void;
+  onQuickUpdate(
+    task: Task,
+    patch: Partial<Pick<TaskFields, 'status' | 'dueDate' | 'priority'>>,
+  ): Promise<void>;
+}
+
+function BacklogItemIdentity({ task }: { task: Task }) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <span className={`work-type-mark work-type-${task.workType}`}>
+        {t(`task.workType.${task.workType}`).slice(0, 1)}
+      </span>
+      <span className="backlog-item-summary">
+        <strong>{task.title}</strong>
+        <small>{task.key}</small>
+      </span>
+    </>
+  );
 }
 
 function BacklogItemContent({
@@ -102,13 +135,7 @@ function BacklogItemContent({
 
   return (
     <>
-      <span className={`work-type-mark work-type-${task.workType}`}>
-        {t(`task.workType.${task.workType}`).slice(0, 1)}
-      </span>
-      <span className="backlog-item-summary">
-        <strong>{task.title}</strong>
-        <small>{task.key}</small>
-      </span>
+      <BacklogItemIdentity task={task} />
       <span className={`status-lozenge status-${task.status}`}>
         {t(`task.status.${task.status}`)}
       </span>
@@ -120,15 +147,24 @@ function BacklogItemContent({
           {task.storyPoints}
         </span>
       ) : null}
-      <span className="backlog-assignee" title={member?.name}>
-        {member?.name.slice(0, 1).toLocaleUpperCase() ?? '—'}
-      </span>
+      <UserAvatar
+        member={member}
+        className="backlog-assignee"
+        initialsLength={1}
+        fallbackLabel={t('task.unassigned')}
+      />
     </>
   );
 }
 
 /** Makes the whole backlog row the editor trigger and accessible drag handle. */
-function BacklogItem({ task, member, onOpenTask }: BacklogItemProps) {
+function BacklogItem({
+  task,
+  member,
+  dropEdge,
+  onOpenTask,
+  onQuickUpdate,
+}: BacklogItemProps) {
   const { t } = useTranslation();
   const {
     attributes,
@@ -149,7 +185,14 @@ function BacklogItem({ task, member, onOpenTask }: BacklogItemProps) {
   };
 
   return (
-    <li ref={setNodeRef} style={style}>
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        dropEdge === 'before' && 'backlog-row-drop-before',
+        dropEdge === 'after' && 'backlog-row-drop-after',
+      )}
+    >
       <Button
         {...attributes}
         {...listeners}
@@ -169,8 +212,25 @@ function BacklogItem({ task, member, onOpenTask }: BacklogItemProps) {
           onOpenTask(task.id, event.currentTarget);
         }}
       >
-        <BacklogItemContent task={task} member={member} />
+        <BacklogItemIdentity task={task} />
+        {task.storyPoints !== null ? (
+          <span className="story-points" title={t('task.fields.storyPoints')}>
+            {task.storyPoints}
+          </span>
+        ) : (
+          <span aria-hidden="true" />
+        )}
+        <UserAvatar
+          member={member}
+          className="backlog-assignee"
+          initialsLength={1}
+          fallbackLabel={t('task.unassigned')}
+        />
       </Button>
+      <BacklogItemQuickFields
+        task={task}
+        onUpdate={(patch) => onQuickUpdate(task, patch)}
+      />
     </li>
   );
 }
@@ -184,9 +244,11 @@ function BacklogSection({
   members,
   sprint,
   isDropTarget,
+  rowDropTarget,
   activeSprintExists,
   onCreate,
   onOpenTask,
+  onQuickUpdate,
   onStartSprint,
   onCompleteSprint,
   onEditSprint,
@@ -250,9 +312,11 @@ function BacklogSection({
               aria-label={t('backlog.assignees')}
             >
               {assignees.slice(0, 3).map((member) => (
-                <span key={member.id} title={member.name}>
-                  {member.name.slice(0, 1).toLocaleUpperCase()}
-                </span>
+                <UserAvatar
+                  key={member.id}
+                  member={member}
+                  initialsLength={1}
+                />
               ))}
               {assignees.length > 3 ? (
                 <small>+{assignees.length - 3}</small>
@@ -315,7 +379,11 @@ function BacklogSection({
                   members.find((member) => member.id === task.assigneeId) ??
                   null
                 }
+                dropEdge={
+                  rowDropTarget?.taskId === task.id ? rowDropTarget.edge : null
+                }
                 onOpenTask={onOpenTask}
+                onQuickUpdate={onQuickUpdate}
               />
             ))}
           </ul>
@@ -374,6 +442,10 @@ export function BacklogPage() {
   );
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [overSectionId, setOverSectionId] = useState<string | null>(null);
+  const [rowDropTarget, setRowDropTarget] = useState<{
+    taskId: string;
+    edge: BacklogDropEdge;
+  } | null>(null);
   const planningSectionSprintIds = useMemo(
     () => [
       ...(snapshot?.sprints
@@ -393,6 +465,22 @@ export function BacklogPage() {
       coordinateGetter: keyboardCoordinates,
     }),
   );
+  const collisionDetection = useMemo<CollisionDetection>(() => {
+    const taskIds = new Set(snapshot?.tasks.map((task) => task.id) ?? []);
+    return (args) => {
+      const pointerCollisions = pointerWithin(args);
+      // The sortable source can remain under the pointer while translated; ignore it so
+      // the destination section or sibling row owns the final drop target.
+      const rowCollisions = pointerCollisions.filter(
+        ({ id }) =>
+          taskIds.has(String(id)) && String(id) !== String(args.active.id),
+      );
+      if (rowCollisions.length > 0) return rowCollisions;
+      return pointerCollisions.length > 0
+        ? pointerCollisions
+        : closestCenter(args);
+    };
+  }, [snapshot?.tasks]);
   const { editor, setEditor, triggerRef, openCreate, openTask } =
     useTaskEditor();
   const selectedTask =
@@ -463,18 +551,51 @@ export function BacklogPage() {
   const resetDragState = () => {
     setActiveTaskId(null);
     setOverSectionId(null);
+    setRowDropTarget(null);
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     setActiveTaskId(String(active.id));
   };
 
-  const handleDragOver = ({ over }: DragOverEvent) => {
+  const dropEdgeForEvent = ({
+    active,
+    delta,
+    over,
+  }: DragOverEvent | DragEndEvent) => {
+    if (!over) return 'before' as const;
+    const activeRect = active.rect.current.translated;
+    const initialRect = active.rect.current.initial;
+    const activeCenter = activeRect
+      ? activeRect.top + activeRect.height / 2
+      : initialRect
+        ? initialRect.top + delta.y + initialRect.height / 2
+        : over.rect.top + over.rect.height / 2;
+    return activeCenter > over.rect.top + over.rect.height / 2
+      ? ('after' as const)
+      : ('before' as const);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
     const target = resolveTarget(over ? String(over.id) : null);
+    const overTask = snapshot?.tasks.find(
+      (task) => task.id === String(over?.id),
+    );
+    if (overTask) {
+      setOverSectionId(null);
+      setRowDropTarget({
+        taskId: overTask.id,
+        edge: dropEdgeForEvent(event),
+      });
+      return;
+    }
+    setRowDropTarget(null);
     setOverSectionId(target ? backlogSectionId(target.sprintId) : null);
   };
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     if (!snapshot || !over) {
       resetDragState();
       return;
@@ -490,6 +611,9 @@ export function BacklogPage() {
       snapshot.tasks,
       task.id,
       String(over.id),
+      snapshot.tasks.some((candidate) => candidate.id === String(over.id))
+        ? dropEdgeForEvent(event)
+        : 'before',
     );
     resetDragState();
     if (!target) return;
@@ -498,6 +622,11 @@ export function BacklogPage() {
     }
     void rankBacklogTask(task.id, target.sprintId, target.toIndex);
   };
+
+  const handleQuickUpdate = (
+    task: Task,
+    patch: Partial<Pick<TaskFields, 'status' | 'dueDate' | 'priority'>>,
+  ) => updateTask(task.id, { ...taskToFields(task), ...patch });
 
   const targetName = (sprintId: string | null) =>
     sprintId === null
@@ -553,19 +682,19 @@ export function BacklogPage() {
           <>
             <Button
               variant="outline"
-              size="lg"
+              size="page"
               disabled={!isReady}
               onClick={() => setSprintDialogOpen(true)}
             >
-              <Plus size={16} />
+              <Plus size={14} aria-hidden="true" />
               {t('sprint.actions.create')}
             </Button>
             <Button
-              size="lg"
+              size="page"
               disabled={!isReady}
               onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
             >
-              <Plus size={16} />
+              <Plus size={14} aria-hidden="true" />
               {t('task.actions.create')}
             </Button>
           </>
@@ -675,7 +804,7 @@ export function BacklogPage() {
       {snapshot ? (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           accessibility={{
             announcements,
             screenReaderInstructions: {
@@ -709,9 +838,11 @@ export function BacklogPage() {
                   activeTaskId !== null &&
                   overSectionId === backlogSectionId(sprint.id)
                 }
+                rowDropTarget={rowDropTarget}
                 activeSprintExists={activeSprintExists}
                 onCreate={(trigger) => openCreate(trigger, 'todo', sprint.id)}
                 onOpenTask={openTask}
+                onQuickUpdate={handleQuickUpdate}
                 onStartSprint={(target) => setStartingSprintId(target.id)}
                 onCompleteSprint={(target) => setCompletingSprintId(target.id)}
                 onEditSprint={(target) => setEditingSprintId(target.id)}
@@ -729,9 +860,11 @@ export function BacklogPage() {
                 activeTaskId !== null &&
                 overSectionId === backlogSectionId(null)
               }
+              rowDropTarget={rowDropTarget}
               activeSprintExists={activeSprintExists}
               onCreate={(trigger) => openCreate(trigger, 'todo', null)}
               onOpenTask={openTask}
+              onQuickUpdate={handleQuickUpdate}
               onStartSprint={() => undefined}
               onCompleteSprint={() => undefined}
               onEditSprint={() => undefined}

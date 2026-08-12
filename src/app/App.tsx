@@ -23,7 +23,7 @@ export function App() {
       return;
     }
     const page = pageFromPath(location.pathname);
-    const pageLabel = page === 'members' ? t('member.title') : t(`nav.${page}`);
+    const pageLabel = t(`nav.${page}`);
     document.title = `${pageLabel} · ${currentProjectName} · ForceTrack`;
   }, [currentProjectName, location.pathname, t]);
 

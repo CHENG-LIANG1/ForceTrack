@@ -288,7 +288,7 @@ test('keeps shared menus aligned and inside the mobile viewport', async ({
   expect(userMenuBox!.x + userMenuBox!.width).toBeLessThanOrEqual(378);
 
   const userMenuItems = userMenu.locator('.ui-menu-item');
-  await expect(userMenuItems).toHaveCount(6);
+  await expect(userMenuItems).toHaveCount(5);
   for (let index = 0; index < (await userMenuItems.count()); index += 1) {
     expect(
       (await userMenuItems.nth(index).boundingBox())!.height,
@@ -321,13 +321,7 @@ test('prevents document-level overflow across every core page', async ({
     { width: 1280, height: 720 },
   ]) {
     await page.setViewportSize(viewport);
-    for (const route of [
-      'summary',
-      'backlog',
-      'board',
-      'timeline',
-      'members',
-    ]) {
+    for (const route of ['summary', 'backlog', 'board', 'timeline']) {
       await page.goto(`/projects/project-forcetrack/${route}`);
       await expect(page.locator('main')).toBeVisible();
       expect(

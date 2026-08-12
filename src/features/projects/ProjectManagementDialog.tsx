@@ -78,7 +78,7 @@ export function ProjectManagementDialog({
     <>
       <Dialog open={open} onOpenChange={changeOpen}>
         <DialogContent className="project-management-dialog">
-          <div className="task-dialog-heading project-management-heading">
+          <div className="task-dialog-heading management-dialog-heading">
             <div>
               <DialogTitle>
                 {t(
