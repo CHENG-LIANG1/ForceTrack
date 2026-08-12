@@ -159,10 +159,28 @@
     "dueSoon": "Due in next 7 days",
     "statusOverview": "Status overview",
     "priorityBreakdown": "Priority breakdown",
+    "workTypes": "Types of work",
     "teamWorkload": "Team workload",
+    "workProgress": "Work progress",
     "recentActivity": "Recent activity",
     "noActivity": "No recent activity yet.",
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "noEpicProgress": "No epics match this view yet.",
+    "noEpicChildren": "No child work items yet.",
+    "childCount": "{{count}} child work items",
+    "statusCount": "{{status}} {{count}}",
+    "filters": {
+      "title": "Filter summary",
+      "active": "{{count}} active dimensions",
+      "clear": "Clear filters",
+      "dateRange": "Date range",
+      "from": "From",
+      "to": "To",
+      "anyDate": "Any date",
+      "clearDate": "Clear date",
+      "parent": "Parent epic",
+      "noEpics": "No epics available"
+    }
   },
   "backlog": {
     "title": "Backlog",
@@ -268,7 +286,13 @@
     "emptyDescription": "Add a start date or due date to a work item to place it here.",
     "today": "Today",
     "unscheduled": "{{count}} work items are unscheduled",
-    "dateRange": "Next four weeks"
+    "unscheduledTitle": "Unscheduled work",
+    "dateRange": "Visible date range",
+    "range": "{{start}} – {{end}}",
+    "rangeClipped": "Range limited to 366 days",
+    "outOfRange": "Outside visible range",
+    "overdue": "Overdue",
+    "noScheduled": "No dated work items. Use the unscheduled list below."
   },
   "a11y": {
     "forceTrackHome": "ForceTrack board",

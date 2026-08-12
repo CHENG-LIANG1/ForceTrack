@@ -1,25 +1,32 @@
+/** Renders every Summary module from one filtered, read-only selector result. */
 import { Plus } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useTasks } from '@/app/task-context';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
-import { TASK_PRIORITIES, TASK_STATUSES } from '@/domain/task';
-import { selectSummaryData } from '@/features/summary/summary-selectors';
+import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '@/domain/task';
+import { SummaryFilterPanel } from '@/features/summary/SummaryFilterPanel';
+import {
+  selectSummaryData,
+  type SummaryFilters,
+} from '@/features/summary/summary-selectors';
 import { TaskDialog } from '@/features/task-editor/TaskDialog';
 import { useTaskEditor } from '@/features/task-editor/useTaskEditor';
 
 export function SummaryPage() {
   const { t } = useTranslation();
   const { snapshot, isReady, createTask, updateTask, deleteTask } = useTasks();
+  const [filters, setFilters] = useState<SummaryFilters>({});
   const { editor, setEditor, triggerRef, openCreate, openTask } =
     useTaskEditor();
   const selectedTask =
     snapshot?.tasks.find((task) => task.id === editor.taskId) ?? null;
 
   const data = useMemo(
-    () => selectSummaryData(snapshot ?? { tasks: [], members: [] }),
-    [snapshot],
+    () => selectSummaryData(snapshot ?? { tasks: [], members: [] }, filters),
+    [filters, snapshot],
   );
 
   const cards = [
@@ -35,21 +42,32 @@ export function SummaryPage() {
 
   return (
     <section className="workspace-page" aria-labelledby="summary-title">
-      <div className="board-heading-row">
-        <div className="page-heading compact-page-heading">
-          <p className="page-kicker">ForceTrack / Summary</p>
-          <h1 id="summary-title">{t('summary.title')}</h1>
-          <p>{t('summary.description')}</p>
-        </div>
-        <Button
-          size="lg"
-          disabled={!isReady}
-          onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
-        >
-          <Plus size={16} />
-          {t('task.actions.create')}
-        </Button>
-      </div>
+      <PageHeader
+        section="Summary"
+        titleId="summary-title"
+        title={t('summary.title')}
+        description={t('summary.description')}
+        actions={
+          <Button
+            size="lg"
+            disabled={!isReady}
+            onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
+          >
+            <Plus size={16} />
+            {t('task.actions.create')}
+          </Button>
+        }
+      />
+
+      {snapshot ? (
+        <SummaryFilterPanel
+          filters={filters}
+          members={snapshot.members}
+          tasks={snapshot.tasks}
+          onChange={setFilters}
+          onClear={() => setFilters({})}
+        />
+      ) : null}
 
       <div className="summary-metrics">
         {cards.map(([label, value]) => (
@@ -84,50 +102,12 @@ export function SummaryPage() {
                     <i className={`legend-dot status-${status}`} />
                     {t(`task.status.${status}`)}
                   </span>
-                  <strong>{count}</strong>
+                  <strong>
+                    {count} · {Math.round(data.status[status].percent)}%
+                  </strong>
                 </div>
               );
             })}
-          </div>
-        </section>
-
-        <section className="summary-panel">
-          <h2>{t('summary.priorityBreakdown')}</h2>
-          <div className="summary-breakdown-list priority-breakdown-list">
-            {TASK_PRIORITIES.map((priority) => {
-              const { count, percent: width } = data.priorities[priority];
-              return (
-                <div key={priority} className="breakdown-row">
-                  <span>{t(`task.priority.${priority}`)}</span>
-                  <span className="breakdown-track">
-                    <i style={{ width: `${width}%` }} />
-                  </span>
-                  <strong>{count}</strong>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="summary-panel">
-          <h2>{t('summary.teamWorkload')}</h2>
-          <div className="workload-list">
-            {data.workload
-              .filter((entry) => entry.member !== null)
-              .map(({ member, count }) => {
-                if (!member) return null;
-                return (
-                  <div key={member.id}>
-                    <span>{member.name}</span>
-                    <span className="breakdown-track">
-                      <i
-                        style={{ width: `${(count / maxMemberLoad) * 100}%` }}
-                      />
-                    </span>
-                    <strong>{count}</strong>
-                  </div>
-                );
-              })}
           </div>
         </section>
 
@@ -150,7 +130,126 @@ export function SummaryPage() {
               ))}
             </ul>
           ) : (
-            <p className="panel-empty">{t('summary.noActivity')}</p>
+            <p className="panel-empty summary-panel-empty">
+              {t('summary.noActivity')}
+            </p>
+          )}
+        </section>
+
+        <section className="summary-panel">
+          <h2>{t('summary.priorityBreakdown')}</h2>
+          <div className="summary-breakdown-list priority-breakdown-list">
+            {TASK_PRIORITIES.map((priority) => {
+              const { count, percent: width } = data.priorities[priority];
+              return (
+                <div key={priority} className="breakdown-row">
+                  <span>{t(`task.priority.${priority}`)}</span>
+                  <span className="breakdown-track">
+                    <i style={{ width: `${width}%` }} />
+                  </span>
+                  <strong>
+                    {count} · {Math.round(width)}%
+                  </strong>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="summary-panel">
+          <h2>{t('summary.workTypes')}</h2>
+          <div className="summary-breakdown-list priority-breakdown-list">
+            {TASK_TYPES.map((workType) => {
+              const { count, percent: width } = data.workTypes[workType];
+              return (
+                <div key={workType} className="breakdown-row">
+                  <span>{t(`task.workType.${workType}`)}</span>
+                  <span className="breakdown-track">
+                    <i style={{ width: `${width}%` }} />
+                  </span>
+                  <strong>
+                    {count} · {Math.round(width)}%
+                  </strong>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="summary-panel">
+          <h2>{t('summary.teamWorkload')}</h2>
+          <div className="workload-list">
+            {data.workload.map(({ assigneeId, member, count }) => (
+              <div key={assigneeId ?? 'unassigned'}>
+                <span>{member?.name ?? t('summary.unassigned')}</span>
+                <span className="breakdown-track">
+                  <i style={{ width: `${(count / maxMemberLoad) * 100}%` }} />
+                </span>
+                <strong>{count}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="summary-panel">
+          <h2>{t('summary.workProgress')}</h2>
+          {data.epicProgress.length ? (
+            <div className="epic-progress-list">
+              {data.epicProgress.map(({ epic, total, byStatus }) => (
+                <article key={epic.id} className="epic-progress-item">
+                  <header>
+                    <Button
+                      variant="unstyled"
+                      type="button"
+                      onClick={(event) =>
+                        openTask(epic.id, event.currentTarget)
+                      }
+                    >
+                      <span>{epic.key}</span>
+                      <strong>{epic.title}</strong>
+                    </Button>
+                    <small>{t('summary.childCount', { count: total })}</small>
+                  </header>
+                  {total ? (
+                    <>
+                      <div
+                        className="status-segments epic-progress-segments"
+                        aria-label={TASK_STATUSES.map((status) =>
+                          t('summary.statusCount', {
+                            status: t(`task.status.${status}`),
+                            count: byStatus[status],
+                          }),
+                        ).join(', ')}
+                      >
+                        {TASK_STATUSES.map((status) => (
+                          <span
+                            key={status}
+                            className={`status-segment status-${status}`}
+                            style={{ flexGrow: byStatus[status] || 0 }}
+                          />
+                        ))}
+                      </div>
+                      <p className="epic-progress-caption">
+                        {TASK_STATUSES.map((status) =>
+                          t('summary.statusCount', {
+                            status: t(`task.status.${status}`),
+                            count: byStatus[status],
+                          }),
+                        ).join(' · ')}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="epic-progress-caption">
+                      {t('summary.noEpicChildren')}
+                    </p>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="panel-empty summary-panel-empty">
+              {t('summary.noEpicProgress')}
+            </p>
           )}
         </section>
       </div>

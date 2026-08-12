@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -549,41 +550,42 @@ export function BacklogPage() {
 
   return (
     <section className="workspace-page" aria-labelledby="backlog-title">
-      <div className="board-heading-row">
-        <div className="page-heading compact-page-heading">
-          <p className="page-kicker">ForceTrack / Backlog</p>
-          <h1 id="backlog-title">{t('backlog.title')}</h1>
-          <p>{t('backlog.description')}</p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={!isReady}
-            onClick={() => setMemberDialogOpen(true)}
-          >
-            <UserPlus size={16} />
-            {t('member.actions.add')}
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={!isReady}
-            onClick={() => setSprintDialogOpen(true)}
-          >
-            <Plus size={16} />
-            {t('sprint.actions.create')}
-          </Button>
-          <Button
-            size="lg"
-            disabled={!isReady}
-            onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
-          >
-            <Plus size={16} />
-            {t('task.actions.create')}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        section="Backlog"
+        titleId="backlog-title"
+        title={t('backlog.title')}
+        description={t('backlog.description')}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={!isReady}
+              onClick={() => setMemberDialogOpen(true)}
+            >
+              <UserPlus size={16} />
+              {t('member.actions.add')}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={!isReady}
+              onClick={() => setSprintDialogOpen(true)}
+            >
+              <Plus size={16} />
+              {t('sprint.actions.create')}
+            </Button>
+            <Button
+              size="lg"
+              disabled={!isReady}
+              onClick={(event) => openCreate(event.currentTarget, 'todo', null)}
+            >
+              <Plus size={16} />
+              {t('task.actions.create')}
+            </Button>
+          </>
+        }
+      />
 
       <div className="backlog-filter-bar">
         <label className="work-search">

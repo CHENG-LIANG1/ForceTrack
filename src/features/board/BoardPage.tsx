@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { useTasks } from '@/app/task-context';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { TASK_STATUSES, type TaskStatus } from '@/domain/task';
 import { CompleteSprintDialog } from '@/features/backlog/CompleteSprintDialog';
@@ -199,32 +200,33 @@ export function BoardPage() {
 
   return (
     <section className="workspace-page" aria-labelledby="board-title">
-      <div className="board-heading-row">
-        <div className="page-heading compact-page-heading">
-          <p className="page-kicker">ForceTrack / Board</p>
-          <h1 id="board-title">{t('board.title')}</h1>
-          <p>{t('board.description')}</p>
-        </div>
-        {activeSprint ? (
-          <div className="board-heading-actions">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setCompleteDialogOpen(true)}
-            >
-              {t('sprint.actions.complete')}
-            </Button>
-            <Button
-              size="lg"
-              onClick={(event) => openCreate('todo', event.currentTarget)}
-              disabled={!isReady}
-            >
-              <Plus size={16} />
-              {t('task.actions.create')}
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      <PageHeader
+        section="Board"
+        titleId="board-title"
+        title={t('board.title')}
+        description={t('board.description')}
+        actions={
+          activeSprint ? (
+            <>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setCompleteDialogOpen(true)}
+              >
+                {t('sprint.actions.complete')}
+              </Button>
+              <Button
+                size="lg"
+                onClick={(event) => openCreate('todo', event.currentTarget)}
+                disabled={!isReady}
+              >
+                <Plus size={16} />
+                {t('task.actions.create')}
+              </Button>
+            </>
+          ) : null
+        }
+      />
 
       {loadWasRecovered ? (
         <div className="feedback-banner" role="status">
